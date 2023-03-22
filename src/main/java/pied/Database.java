@@ -1,4 +1,4 @@
-package main;
+package pied;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

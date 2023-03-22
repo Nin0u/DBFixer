@@ -1,4 +1,4 @@
-package main;
+package pied;
 import java.util.ArrayList;
 import contrainte.*;
 
