@@ -49,4 +49,7 @@ public abstract class Contrainte {
      * @param T Tuple trouvé qui respecte le corps mais pas la tête
      */
     public abstract void action(ResultSet T);
+
+    /** Méthode d'affichage */
+    public abstract void affiche();
 }

@@ -19,4 +19,20 @@ public class EGD extends Contrainte {
     public void action(ResultSet T){
         // TODO
     }
+
+    public void affiche(){
+        System.out.println("===========  EGD ==============");
+        System.out.println("---- Corps ----");
+        for (Relation r : rlCorps)
+            r.affiche();
+
+        for(Egalite e : egCorps)
+            e.affiche();
+
+        System.out.println("---- Tete ----");
+        for (Egalite e : egTete)
+            e.affiche(); 
+
+        System.out.println("=========== FIN EGD ==============");
+    }
 }

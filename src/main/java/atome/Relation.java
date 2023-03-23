@@ -31,4 +31,13 @@ public class Relation{
         membres.add(v);
     }
 
+    /** Méthode d'afichage */
+    public void affiche(){
+        System.out.println("-- Relation --");
+        System.out.println("Table = " + nomTable);
+        for (Variable v : membres) 
+            v.affiche();
+
+        System.out.println("-- Fin --");
+    }
 }

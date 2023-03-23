@@ -18,4 +18,9 @@ public class Constante extends Variable{
     public void setValeur(String valeur){
         this.valeur = valeur;
     }
+
+    /** Méthode d'affichage */
+    public void affiche(){
+        System.out.println("Const : " + valeur);
+    }
 }

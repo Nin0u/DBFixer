@@ -3,6 +3,8 @@ package pied;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Pattern;
+
 import contrainte.*;
 import atome.*;
 import variable.*;
@@ -21,6 +23,7 @@ public class Parser {
 
         // On lit la première entrée qui est un entier
         int n;
+        if (in.equals(System.in)) System.out.print("n = ");
         try{
             n = Integer.parseInt(sc.nextLine());
         } catch (NumberFormatException e) {
@@ -31,7 +34,9 @@ public class Parser {
 
         for(int i = 0; i < n; i++){
             // On lit la ligne
+            if(in.equals(System.in)) System.out.print("DF n°" + String.valueOf(i) + " : ");
             String line = sc.nextLine();
+            line = line.trim();
 
             // On split la ligne en deux chaine : le corps et la tete
             String[] df = line.split("->");
@@ -50,6 +55,7 @@ public class Parser {
                 System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
             }
+
             if (!parseConjonction(df[0], egalite_corps, relation_corps)){
                 System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
@@ -59,7 +65,7 @@ public class Parser {
             if(relation_tete.size() == 0)
                 c.add(new EGD(relation_corps, egalite_corps, egalite_tete));
             else
-                c.add(new TGD(relation_corps, egalite_corps, egalite_tete, relation_corps));
+                c.add(new TGD(relation_corps, egalite_corps, egalite_tete, relation_tete));
         }
 
         sc.close();
@@ -76,6 +82,7 @@ public class Parser {
      * @return Un booleen indiquant si la conjonction est valide
      */
     private static boolean parseConjonction(String conj, ArrayList<Egalite> eg, ArrayList<Relation> rel){
+        conj = conj.trim();
         if(conj.equals("")) return false;
 
         // On créer un tableau avec chaque terme de la conjonction
@@ -86,18 +93,22 @@ public class Parser {
             s = s.trim();
             if (s.equals("")) return false;
 
-            // Si s est de la forme (*=*) alors c'est un egalité
-            if (s.matches("(*=*)")){
+            // Regex pour test si egalite ou relation
+            String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_c|_[0-9]+)?";
+            Pattern p_egalite = Pattern.compile("^\\([ ]*" + var_regex + "[ ]*=[ ]*" + var_regex + "[ ]*\\)");
+            Pattern p_relation = Pattern.compile("[a-zA-Z]+[a-zA-Z0-9]*[ ]*\\([ ]*" + var_regex + "(,[ ]*"  + var_regex + "[ ]*)*" + "[ ]*\\)");
+
+            // Si s est un égalité
+            if (p_egalite.matcher(s).find()){
                 // On enlève les parenthèses
                 s = s.substring(1, s.length() - 1);
-                // On séparé à l'égalité en vérifiant qu'on coupe bien en deux
+                // On séparé à l'égalité
                 String[] membres = s.split("=");
-                if (membres.length != 2) return false;
+
                 // On regarde si les membres sont des attributs ou des constantes
                 Variable[] variables = new Variable[2];
                 for(int i = 0; i < 2; i++){
                     membres[i] = membres[i].trim();
-                    if (membres[i].equals("")) return false;
                     
                     // Pour les constantes on les indique avec un _c
                     // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
@@ -110,7 +121,6 @@ public class Parser {
                         else if (var[1].matches("[0-9]"))
                             variables[i] = new Attribut(var[0], Integer.parseInt(var[1]));
                         else return false;
-
                     }
                     else
                         variables[i] = new Attribut(membres[i], 0);
@@ -119,18 +129,19 @@ public class Parser {
                 eg.add(new Egalite(variables[0], variables[1]));
             }
 
-            // Sinon c'est un relation de la forme *(*)
-            else if(s.matches("*(*)")){
+            // si s est une relation
+            else if(p_relation.matcher(s).find()){
                 // On peut couper à ( pour récupérer la table au début
-                String[] membres = s.split("(");
+                String[] membres = s.split("\\(");
+
                 if (membres.length != 2) return false;
+
+                membres[1] = membres[1].substring(0, membres[1].length() -1);
 
                 for (int i = 0; i < 2; i++){
                     membres[i] = membres[i].trim();
                     if (membres[i].equals("")) return false;
                 }
-
-                membres[1] = membres[1].substring(0, membres[1].length() -1);
 
                 Relation r = new Relation(membres[0]);
 
@@ -140,19 +151,20 @@ public class Parser {
                     if (var[i].equals("")) return false;
                     
                     if (var[i].contains("_")){
-                        String[] v = membres[i].split("_");
+                        String[] v = var[i].split("_");
                         if (v[0].equals("") || var[1].equals("")) return false;
 
                         if(v[1].equals("c"))
-                            r.addVar(new Constante(var[0]));
-                        else if (v[1].matches("[0-9]"))
-                            r.addVar(new Attribut(var[0], Integer.parseInt(v[1])));
+                            r.addVar(new Constante(v[0]));
+                        else if (v[1].matches("[0-9]*"))
+                            r.addVar(new Attribut(v[0], Integer.parseInt(v[1])));
                         else return false;
 
                     }
                     else
-                        r.addVar(new Attribut(membres[i], 0));
+                        r.addVar(new Attribut(var[i], 0));
                 }
+                rel.add(r);
             }
             
             else return false;

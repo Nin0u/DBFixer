@@ -17,4 +17,12 @@ public class Egalite {
         return membres;
     }
 
+    /** Méthode d'afichage */
+    public void affiche(){
+        System.out.println("-- Egalite --");
+        membres[0].affiche();
+        membres[1].affiche();
+
+        System.out.println("-- Fin --");
+    }
 }

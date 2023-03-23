@@ -25,4 +25,23 @@ public class TGD extends Contrainte {
     public void action(ResultSet T){
         // TODO
     }
+
+    public void affiche(){
+        System.out.println("===========  TGD ==============");
+        System.out.println("---- Corps ----");
+        for (Relation r : rlCorps)
+            r.affiche();
+
+        for(Egalite e : egCorps)
+            e.affiche();
+
+        System.out.println("---- Tete ----");
+        for (Relation r : rlTete)
+            r.affiche();
+
+        for (Egalite e : egTete)
+            e.affiche(); 
+
+        System.out.println("=========== FIN TGD ==============");
+    }
 }

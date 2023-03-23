@@ -30,4 +30,9 @@ public class Attribut extends Variable {
     public void setIndice(int indice){
         this.indice = indice;
     }
+
+    /** Méthode d'affichage */
+    public void affiche(){
+        System.out.println("Attribut : " + nom + " Indice : " + String.valueOf(indice));
+    }
 }
