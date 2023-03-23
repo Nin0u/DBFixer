@@ -2,7 +2,9 @@ package pied;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.ResultSet;
 
 public class Database {
     private String url;
@@ -29,5 +31,17 @@ public class Database {
         }
 
         return conn;
+    }
+
+    public ResultSet selectRequest(String selectSQL){
+        ResultSet res = null;
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(selectSQL);
+            res = pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return res;
     }
 }

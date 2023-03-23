@@ -1,37 +1,32 @@
 package variable;
 
 public class Attribut extends Variable {
-    private String nomTable;
     private String nom;
     private int indice;
 
-    public Attribut(String nomTable, String nom, int indice){
+    /** Constructeur */
+    public Attribut(String nom, int indice){
         super();
-        this.nomTable = nomTable;
         this.nom = nom;
         this.indice = indice;
     }
 
-    public String getNomTable(){
-        return nomTable;
-    }
-
-    public String nom(){
+    /** Getter */
+    public String getNom(){
         return nom;
     }
 
+    /** Getter */
     public int getIndice(){
         return indice;
     }
 
-    public void setNomTable(String nomTable){
-        this.nomTable = nomTable;
-    }
-
+    /** Setter */
     public void setNom(String nom){
         this.nom = nom;
     }
 
+    /** Setter */
     public void setIndice(int indice){
         this.indice = indice;
     }
