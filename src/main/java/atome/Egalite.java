@@ -1,19 +1,19 @@
 package atome;
-import variable.Variable;
+import variable.Attribut;
 
 public class Egalite {
     /** Un égalité contient 2 membres qui sont soit des attributs soit des constantes */
-    private Variable[] membres;
+    private Attribut[] membres;
 
     /** Constructeur */
-    public Egalite(Variable var1, Variable var2){
-        membres = new Variable[2];
+    public Egalite(Attribut var1, Attribut var2){
+        membres = new Attribut[2];
         membres[0] = var1;
         membres[1] = var2;
     }
 
     /** Getter */
-    Variable[] getMembres(){
+    public Attribut[] getMembres() {
         return membres;
     }
 

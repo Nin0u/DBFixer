@@ -2,8 +2,10 @@ package contrainte;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import atome.*;
+import pied.Database;
 
 public class EGD extends Contrainte {
 

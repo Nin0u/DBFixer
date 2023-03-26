@@ -1,11 +1,12 @@
 package atome;
 import java.util.ArrayList;
 
+import variable.Attribut;
 import variable.Variable;
 
 public class Relation{
     /** Un relation contient plusieurs variables qui sont soit des constantes soit des attributs */
-    private ArrayList<Variable> membres;
+    private ArrayList<Attribut> membres;
 
     /** Nom de la table liée à la relation */
     private String nomTable;
@@ -13,7 +14,7 @@ public class Relation{
     /** Constructeur */
     public Relation(String nomTable){
         this.nomTable = nomTable;
-        this.membres = new ArrayList<Variable>();
+        this.membres = new ArrayList<Attribut>();
     }
 
     /** Getter */
@@ -22,12 +23,12 @@ public class Relation{
     }
     
     /** Getter */
-    public ArrayList<Variable> getMembres() {
+    public ArrayList<Attribut> getMembres() {
         return membres;
     }
 
     /** Méthode d'ajout */
-    public void addVar(Variable v) {
+    public void addVar(Attribut v) {
         membres.add(v);
     }
 

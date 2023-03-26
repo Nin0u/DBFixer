@@ -27,8 +27,11 @@ public class Main{
         else {
             for(Contrainte c : contraintes){
                 c.affiche();
+                c.executeCorps(null);
                 System.out.println("\n");
-            }        
+            }    
+            
+            
         }
     }
 }
