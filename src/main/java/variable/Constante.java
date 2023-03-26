@@ -1,11 +1,11 @@
 package variable;
 
-public class Constante extends Variable{
+public class Constante extends Attribut{
     private String valeur;
 
     /** Constructeur */
-    public Constante(String valeur){
-        super();
+    public Constante(String nom, int indice, String valeur){
+        super(nom, indice);
         this.valeur = valeur;
     }
 

@@ -1,8 +1,8 @@
 package variable;
 
 public class Attribut extends Variable {
-    private String nom;
-    private int indice;
+    protected String nom;
+    protected int indice;
 
     /** Constructeur */
     public Attribut(String nom, int indice){

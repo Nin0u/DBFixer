@@ -102,28 +102,58 @@ public class Parser {
             if (p_egalite.matcher(s).find()){
                 // On enlève les parenthèses
                 s = s.substring(1, s.length() - 1);
-                // On séparé à l'égalité
+                // On sépare à l'égalité
                 String[] membres = s.split("=");
 
                 // On regarde si les membres sont des attributs ou des constantes
+                // Une constante est de la forme attribut = valeur
                 Variable[] variables = new Variable[2];
                 for(int i = 0; i < 2; i++){
                     membres[i] = membres[i].trim();
-                    
-                    // Pour les constantes on les indique avec un _c
-                    // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
-                    if (membres[i].contains("_")){
-                        String[] var = membres[i].split("_");
-                        if (var[0].equals("") || var[1].equals("")) return false;
 
-                        if(var[1].equals("c"))
-                            variables[i] =  new Constante(var[0]);
-                        else if (var[1].matches("[0-9]"))
-                            variables[i] = new Attribut(var[0], Integer.parseInt(var[1]));
-                        else return false;
+                    // Pour savoir si c'est une constante : On resplit d'abord avec =
+                    String[] t = membres[i].split("=");
+                    if(t.length != 1 && t.length != 2) return false;
+
+                    // On a qu'un attribut
+                    if (t.length == 1) {
+                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
+                        if (t[0].contains("_")){
+                            String[] var = t[0].split("_");
+                            // cas d'erreur
+                            if (var[0].equals("") || var[1].equals("")) return false;
+
+                            // Cas ou on a un indice
+                            if (var[1].matches("[0-9]+"))
+                                variables[i] = new Attribut(var[0], Integer.parseInt(var[1]));
+
+                            // Autre cas : erreur
+                            else return false;
+                        }
+
+                        // Pas d'indice ; on met par défaut à 0
+                        else variables[i] = new Attribut(t[0], 0);
                     }
-                    else
-                        variables[i] = new Attribut(membres[i], 0);
+
+                    // On a une constante
+                    else {
+                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
+                        if (t[0].contains("_")){
+                            String[] var = t[0].split("_");
+                            // cas d'erreur
+                            if (var[0].equals("") || var[1].equals("")) return false;
+
+                            // Cas ou on a un indice
+                            if (var[1].matches("[0-9]+"))
+                                variables[i] = new Constante(var[0], Integer.parseInt(var[1]), t[1]);
+
+                            // Autre cas : erreur
+                            else return false;
+                        }
+
+                        // Pas d'indice ; on met par défaut à 0
+                        else variables[i] = new Constante(t[0], 0,t[1]);
+                    }
                 }
 
                 eg.add(new Egalite(variables[0], variables[1]));
@@ -134,8 +164,10 @@ public class Parser {
                 // On peut couper à ( pour récupérer la table au début
                 String[] membres = s.split("\\(");
 
+                // Cas d'erreur
                 if (membres.length != 2) return false;
 
+                // on enlève )
                 membres[1] = membres[1].substring(0, membres[1].length() -1);
 
                 for (int i = 0; i < 2; i++){
@@ -145,24 +177,54 @@ public class Parser {
 
                 Relation r = new Relation(membres[0]);
 
-                String[] var = membres[1].split(",");
-                for (int i = 0; i < var.length; i++){
-                    var[i] = var[i].trim();
-                    if (var[i].equals("")) return false;
-                    
-                    if (var[i].contains("_")){
-                        String[] v = var[i].split("_");
-                        if (v[0].equals("") || var[1].equals("")) return false;
+                String[] v = membres[1].split(",");
+                for (int i = 0; i < v.length; i++){
+                    v[i] = v[i].trim();
+                    if (v[i].equals("")) return false;
+    
+                    // Pour savoir si c'est une constante : On resplit d'abord avec =
+                    String[] t = v[i].split("=");
+                    if(t.length != 1 && t.length != 2) return false;
 
-                        if(v[1].equals("c"))
-                            r.addVar(new Constante(v[0]));
-                        else if (v[1].matches("[0-9]*"))
-                            r.addVar(new Attribut(v[0], Integer.parseInt(v[1])));
-                        else return false;
+                    // On a qu'un attribut
+                    if (t.length == 1) {
+                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
+                        if (t[0].contains("_")){
+                            String[] var = t[0].split("_");
+                            // cas d'erreur
+                            if (var[0].equals("") || var[1].equals("")) return false;
 
+                            // Cas ou on a un indice
+                            if (var[1].matches("[0-9]+"))
+                                r.addVar(new Attribut(var[0], Integer.parseInt(var[1])));
+
+                            // Autre cas : erreur
+                            else return false;
+                        }
+
+                        // Pas d'indice ; on met par défaut à 0
+                        else r.addVar(new Attribut(t[0], 0));
                     }
-                    else
-                        r.addVar(new Attribut(var[i], 0));
+
+                    // On a une constante
+                    else {
+                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
+                        if (t[0].contains("_")){
+                            String[] var = t[i].split("_");
+                            // cas d'erreur
+                            if (var[0].equals("") || var[1].equals("")) return false;
+
+                            // Cas ou on a un indice
+                            if (var[1].matches("[0-9]+"))
+                                r.addVar(new Constante(var[0], Integer.parseInt(var[1]), t[1]));
+
+                            // Autre cas : erreur
+                            else return false;
+                        }
+
+                        // Pas d'indice ; on met par défaut à 0
+                        else r.addVar(new Constante(t[0], 0,t[1]));
+                    }
                 }
                 rel.add(r);
             }
