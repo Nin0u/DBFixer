@@ -29,5 +29,5 @@ INSERT INTO Ral VALUES
 
 INSERT INTO Eleve VALUES
 (1, 'ROUGEOLLE', 'Yoan', 21),
-(1, 'BIDULE', 'machin', 25),
+(1, 'BIDULE', 'machin', 21),
 (3, 'Test', 'BLABL', 41);

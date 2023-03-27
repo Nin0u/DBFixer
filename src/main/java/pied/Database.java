@@ -1,5 +1,6 @@
 package pied;
 
+import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -44,6 +45,32 @@ public class Database {
         }
 
         return res;
+    }
+
+    public ResultSet selectUpdate(String selectSQL) {
+        ResultSet rs = null;
+        conn = connect();
+        try {
+            PreparedStatement stmt = conn.prepareStatement(selectSQL,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_UPDATABLE);
+            rs = stmt.executeQuery();
+            //conn.close();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return rs;
+    }
+
+    public void closeConnexion() {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public int updateRequest(String updateSQL) {

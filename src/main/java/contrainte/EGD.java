@@ -3,9 +3,7 @@ package contrainte;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import atome.*;
 import pied.Database;
@@ -44,6 +42,7 @@ public class EGD extends Contrainte {
         
         try {
             ResultSetMetaData rsmd = T.getMetaData();
+            boolean end = false;
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");
@@ -54,6 +53,7 @@ public class EGD extends Contrainte {
                     Attribut [] attr = eg.getMembres();
                     ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
                     ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
+                    //TODO: Si indexRight.size() == 0 et que attr[1] est une constante ---> à voir mais ça change un peu
                     if(indexLeft.size() == 0 || indexRight.size() == 0) {
                         System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
                         return -1;
@@ -62,9 +62,7 @@ public class EGD extends Contrainte {
                         for(int ri : indexRight) {
                             if(!T.getString(li + 1).equals(T.getString(ri + 1))) {
                                 System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
-                                //TODO: Faire l'UPDATE !
                                 
-
                                 String update = "UPDATE " + ordRelations.get(ri).getNomTable() + " SET ";
                                 if(!isWriteType(rsmd.getColumnType(li + 1)))
                                     update += attr[1].getNom() + " = " + T.getString(li + 1) + " ";
@@ -88,11 +86,15 @@ public class EGD extends Contrainte {
                                 System.out.println(update);
                                 
                                 db.updateRequest(update);
-                                return 1;                   
+                                //T.updateObject(ri+1, T.getObject(li + 1), rsmd.getColumnType(ri + 1));
+                                end = true;
+                               // return 1;             
                             }
                         }
                     }
                 }
+
+                if(end) return 1;
             }
             return 0;
         } catch (SQLException e) {
@@ -102,12 +104,6 @@ public class EGD extends Contrainte {
         }
     }
 
-    private boolean isWriteType(int t) {
-        return (t == Types.VARCHAR) ||
-               (t == Types.VARBINARY) ||
-               (t == Types.NVARCHAR) ||
-               (t == Types.LONGNVARCHAR);
-    }
 
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {
         ArrayList<Integer> l = new ArrayList<>();

@@ -1,17 +1,13 @@
 package contrainte;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.Map.Entry;
 
 import atome.*;
 import pied.Database;
 import variable.Attribut;
 import variable.Constante;
-import variable.Variable;
 
 public abstract class Contrainte {
     /**
@@ -130,6 +126,15 @@ public abstract class Contrainte {
         System.out.println(req);
 
         return req;
+    }
+
+
+    protected boolean isWriteType(int t) {
+        return (t == Types.VARCHAR) ||
+               (t == Types.VARBINARY) ||
+               (t == Types.NVARCHAR) ||
+               (t == Types.LONGNVARCHAR) ||
+               (t == Types.DATE);
     }
     
     /** 
