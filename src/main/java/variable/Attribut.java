@@ -35,4 +35,16 @@ public class Attribut extends Variable {
     public void affiche(){
         System.out.println("Attribut : " + nom + " Indice : " + String.valueOf(indice));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof Attribut)) return false;
+        Attribut a = (Attribut)o;
+        return (a.nom.equals(this.nom)) && (a.indice == this.indice);
+    }
+
+    @Override
+    public int hashCode() {
+        return indice + nom.hashCode();
+    }
 }

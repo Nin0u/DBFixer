@@ -21,17 +21,17 @@ public class Main{
                 return;
             }
         }
+        //TODO: Faire en sorte qu'on puisse rentrer ces données dedans via un fichier ou dans le terminal
+        Database db = new Database("jdbc:postgresql://localhost/bd", "yoan", "yoyo");
         ArrayList<Contrainte> contraintes = Parser.parse(is);
 
         if (contraintes == null) System.out.println("contraintes null");
         else {
             for(Contrainte c : contraintes){
                 c.affiche();
-                c.executeCorps(null);
+                c.action(c.executeCorps(db), db);
                 System.out.println("\n");
             }    
-            
-            
         }
     }
 }

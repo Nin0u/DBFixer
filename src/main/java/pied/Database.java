@@ -17,7 +17,6 @@ public class Database {
         this.user = user;
         this.password = password;
 
-        conn = connect();
     }
     
     private Connection connect() {
@@ -34,14 +33,31 @@ public class Database {
     }
 
     public ResultSet selectRequest(String selectSQL){
+        conn = connect();
         ResultSet res = null;
         try {
             PreparedStatement pstmt = conn.prepareStatement(selectSQL);
             res = pstmt.executeQuery();
+            conn.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
 
+        return res;
+    }
+
+    public int updateRequest(String updateSQL) {
+        conn = connect();
+        int res = 0;
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(updateSQL);
+            res = pstmt.executeUpdate();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
         return res;
     }
 }

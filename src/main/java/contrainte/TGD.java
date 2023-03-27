@@ -3,6 +3,7 @@ package contrainte;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import atome.*;
+import pied.Database;
 
 public class TGD extends Contrainte {
     private ArrayList<Relation> rlTete;
@@ -22,7 +23,7 @@ public class TGD extends Contrainte {
      * Ajoute un nouveau tuple u tq db union u satisfait e
      * @param T Un tuple qui satisfait le corps mais pas la tête de e
      */
-    public void action(ResultSet T){
+    public void action(ResultSet T, Database db){
         // TODO
     }
 

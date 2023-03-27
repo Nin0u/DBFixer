@@ -1,6 +1,7 @@
 package contrainte;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -64,7 +65,7 @@ public abstract class Contrainte {
             i++;
         }   
 
-        HashMap<String, ArrayList<String>> mapAttrTable = new HashMap<>();
+        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
 
         for(Relation rel : rlCorps) {
             from += rel.getNomTable() + " " + map.get(rel.getNomTable()) + ", ";
@@ -72,12 +73,12 @@ public abstract class Contrainte {
                 select += map.get(rel.getNomTable()) + "." + a.getNom() + ", ";
                 if(a instanceof Constante) {
                     Constante c = (Constante)a;
-                    where += map.get(rel.getNomTable()) + "." + c.getNom() + "=" + c.getValeur() + ", ";
+                    where += map.get(rel.getNomTable()) + "." + c.getNom() + "=" + c.getValeur() + " AND ";
                 }
-                ArrayList<String> l = mapAttrTable.get(a.getNom());
+                ArrayList<String> l = mapAttrTable.get(a);
                 if(l == null) l = new ArrayList<>();
                 l.add(map.get(rel.getNomTable()));
-                mapAttrTable.put(a.getNom(), l);
+                mapAttrTable.put(a, l);
             }
         }
 
@@ -91,7 +92,7 @@ public abstract class Contrainte {
         for(Egalite eg : egCorps) {
             Attribut[] attr = eg.getMembres();
             String left = attr[0].getNom();
-            ArrayList<String> tLeft = mapAttrTable.get(left);
+            ArrayList<String> tLeft = mapAttrTable.get(attr[0]);
             if(tLeft == null) {
                 System.out.println("pbm left");
                 return null;
@@ -99,36 +100,39 @@ public abstract class Contrainte {
             left = tLeft.get(0) + "." + left;
 
             String right = attr[1].getNom();
-            ArrayList<String> tRight = mapAttrTable.get(right);
+            ArrayList<String> tRight = mapAttrTable.get(attr[1]);
             if(tRight == null) {
                 System.out.println("pbm right");
                 return null;
             }
             right = tRight.get(0) + "." + right;
-            where += left + "=" + right + ", ";
+            where += left + "=" + right + " AND ";
         }
 
-        for(HashMap.Entry<String, ArrayList<String>> entry : mapAttrTable.entrySet()) {
+        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
             String prev = "";
-            String nom = entry.getKey();
+            String nom = entry.getKey().getNom();
             for(String elt : entry.getValue()) {
-                System.out.println(nom + " " + elt);
                 if(prev.length() != 0) {
-                    where += prev + "=" + elt + "." + nom + ", ";
+                    where += prev + "=" + elt + "." + nom + " AND ";
                 }
                 prev = elt + "." + nom;
             }
         }
 
-        if(where.length() > 6)
-            where = where.substring(0, where.length() - 2);
+        String req = select + " " + from;
 
-        String req = select + " " + from + " " + where;
+        if(where.length() > 6) {
+            where = where.substring(0, where.length() - 5);
+            req += " " + where;
+        }
+
 
         System.out.println(req);
 
-        return null;
+        ResultSet set = db.selectRequest(req);
 
+        return set;
     }
     
     /** 
@@ -137,7 +141,7 @@ public abstract class Contrainte {
      * 
      * @param T Tuple trouvé qui respecte le corps mais pas la tête
      */
-    public abstract void action(ResultSet T);
+    public abstract void action(ResultSet T, Database db);
 
     /** Méthode d'affichage */
     public abstract void affiche();

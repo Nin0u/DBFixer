@@ -1,0 +1,20 @@
+DROP TABLE IF EXISTS Rel;
+DROP TABLE IF EXISTS Ral;
+
+CREATE TABLE Rel (
+    a INTEGER,
+    b INTEGER
+);
+
+CREATE TABLE Ral (
+    a INTEGER,
+    b INTEGER
+);
+
+INSERT INTO Rel VALUES
+(1, 2),
+(2, 3);
+
+INSERT INTO Ral VALUES
+(2, 2),
+(3, 3);
