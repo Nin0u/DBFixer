@@ -41,7 +41,7 @@ public class Parser {
             // On split la ligne en deux chaine : le corps et la tete
             String[] df = line.split("->");
             if (df.length != 2) {
-                System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
+                System.out.println("Parser.parse() : -> : L'entrée n° " + String.valueOf(i) + " n'est pas une DF , elle sera retirée.");
                 continue;
             }
 
@@ -53,12 +53,12 @@ public class Parser {
             ArrayList<Relation> relation_corps = new ArrayList<Relation>();
             
             if(!parseConjonction(df[1], egalite_tete, relation_tete)) {
-                System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
+                System.out.println("Parser.parse() : parseConjonction(tete) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
             }
 
             if (!parseConjonction(df[0], egalite_corps, relation_corps)){
-                System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
+                System.out.println("Parser.parse() : parseConjonction(corps) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
             }
 
@@ -95,8 +95,9 @@ public class Parser {
             if (s.equals("")) return false;
             
             // Regex pour test si egalite ou relation
-            String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_c|_[0-9]+)?";
-            Pattern p_egalite = Pattern.compile("^\\([ ]*" + var_regex + "[ ]*=[ ]*" + var_regex + "[ ]*\\)");
+            // ! Remarque : Une egalite est de la forme x # y, le = servant aux constantes
+            String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_[0-9]+)?(?:=[a-zA-Z0-9]+)?";
+            Pattern p_egalite = Pattern.compile("\\([ ]*" + var_regex + "[ ]*#[ ]*" + var_regex + "[ ]*\\)");
             Pattern p_relation = Pattern.compile("[a-zA-Z]+[a-zA-Z0-9]*[ ]*\\([ ]*" + var_regex + "(,[ ]*"  + var_regex + "[ ]*)*" + "[ ]*\\)");
             
             // Si s est un égalité
@@ -104,7 +105,7 @@ public class Parser {
                 // On enlève les parenthèses
                 s = s.substring(1, s.length() - 1);
                 // On sépare à l'égalité
-                String[] membres = s.split("=");
+                String[] membres = s.split("#");
                 
                 // On regarde si les membres sont des attributs ou des constantes
                 // Une constante est de la forme attribut = valeur
