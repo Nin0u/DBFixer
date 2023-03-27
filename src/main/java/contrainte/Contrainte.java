@@ -51,33 +51,32 @@ public abstract class Contrainte {
         return egTete;
     }
 
-    public ResultSet executeCorps(Database db) {
+    public String executeCorps(Database db) {
         String select = "SELECT ";
         String from = "FROM ";
         String where = "WHERE ";
 
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<Relation, String> map = new HashMap<>();
 
         int i = 0;
         for(Relation rel : rlCorps) {
-            String table = rel.getNomTable();
-            map.put(table, "T" + i);
+            map.put(rel, "T" + i);
             i++;
         }   
 
         HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
 
         for(Relation rel : rlCorps) {
-            from += rel.getNomTable() + " " + map.get(rel.getNomTable()) + ", ";
+            from += rel.getNomTable() + " " + map.get(rel) + ", ";
             for(Attribut a : rel.getMembres()) {
-                select += map.get(rel.getNomTable()) + "." + a.getNom() + ", ";
+                select += map.get(rel) + "." + a.getNom() + ", ";
                 if(a instanceof Constante) {
                     Constante c = (Constante)a;
-                    where += map.get(rel.getNomTable()) + "." + c.getNom() + "=" + c.getValeur() + " AND ";
+                    where += map.get(rel) + "." + c.getNom() + "=" + c.getValeur() + " AND ";
                 }
                 ArrayList<String> l = mapAttrTable.get(a);
                 if(l == null) l = new ArrayList<>();
-                l.add(map.get(rel.getNomTable()));
+                l.add(map.get(rel));
                 mapAttrTable.put(a, l);
             }
         }
@@ -130,9 +129,7 @@ public abstract class Contrainte {
 
         System.out.println(req);
 
-        ResultSet set = db.selectRequest(req);
-
-        return set;
+        return req;
     }
     
     /** 
@@ -141,7 +138,7 @@ public abstract class Contrainte {
      * 
      * @param T Tuple trouvé qui respecte le corps mais pas la tête
      */
-    public abstract void action(ResultSet T, Database db);
+    public abstract int action(String req, Database db);
 
     /** Méthode d'affichage */
     public abstract void affiche();

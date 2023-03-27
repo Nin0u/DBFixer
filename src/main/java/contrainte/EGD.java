@@ -1,7 +1,9 @@
 package contrainte;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -20,11 +22,12 @@ public class EGD extends Contrainte {
      * Egaliser les tuples de T en accord avec la contrainte this
      * @param T Un tuple qui satisfait le corps mais pas la tête de e
      */
-    public void action(ResultSet T, Database db){
+    public int action(String req, Database db){
         int nb = 0;
 
+        ResultSet T = db.selectRequest(req);
+
         ArrayList<Attribut> orderAttribut = new ArrayList<>();
-        HashMap<Attribut, ArrayList<Relation>> mapAttrTable = new HashMap<>();
 
         ArrayList<Relation> ordRelations = new ArrayList<>();
         ArrayList<Integer> cut = new ArrayList<>();
@@ -33,10 +36,6 @@ public class EGD extends Contrainte {
         for(Relation rel : rlCorps) {
             for(Attribut a : rel.getMembres()) {
                 orderAttribut.add(a);
-                ArrayList<Relation> l = mapAttrTable.get(a);
-                if(l == null) l = new ArrayList<>();
-                l.add(rel);
-                mapAttrTable.put(a, l);
                 ordRelations.add(rel);
                 nb++;
             }
@@ -44,6 +43,7 @@ public class EGD extends Contrainte {
         }
         
         try {
+            ResultSetMetaData rsmd = T.getMetaData();
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");
@@ -56,7 +56,7 @@ public class EGD extends Contrainte {
                     ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
                     if(indexLeft.size() == 0 || indexRight.size() == 0) {
                         System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
-                        return;
+                        return -1;
                     }
                     for(int li : indexLeft) {
                         for(int ri : indexRight) {
@@ -66,7 +66,9 @@ public class EGD extends Contrainte {
                                 
 
                                 String update = "UPDATE " + ordRelations.get(ri).getNomTable() + " SET ";
-                                update += attr[1].getNom() + " = " + T.getString(li + 1) + " ";
+                                if(!isWriteType(rsmd.getColumnType(li + 1)))
+                                    update += attr[1].getNom() + " = " + T.getString(li + 1) + " ";
+                                else update += attr[1].getNom() + " = '" + T.getString(li + 1) + "' ";
                                 update += "WHERE ";
 
                                 int min = getMin(cut, ri);
@@ -75,22 +77,36 @@ public class EGD extends Contrainte {
                                 System.out.println(max);
                                 
                                 for(int j = min; j < max; j++) {
-                                    update += orderAttribut.get(j).getNom() + "=" + T.getString(j) + " AND ";
+                                    int t = rsmd.getColumnType(j + 1);
+                                    if(!isWriteType(t))
+                                        update += orderAttribut.get(j).getNom() + "=" + T.getString(j + 1) + " AND ";
+                                    else 
+                                        update += orderAttribut.get(j).getNom() + "='" + T.getString(j + 1) + "' AND ";
                                 }
-
+    
                                 update = update.substring(0, update.length() - 5);
                                 System.out.println(update);
                                 
                                 db.updateRequest(update);
+                                return 1;                   
                             }
                         }
                     }
                 }
             }
+            return 0;
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return -1;
         }
+    }
+
+    private boolean isWriteType(int t) {
+        return (t == Types.VARCHAR) ||
+               (t == Types.VARBINARY) ||
+               (t == Types.NVARCHAR) ||
+               (t == Types.LONGNVARCHAR);
     }
 
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {

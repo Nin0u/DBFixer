@@ -29,7 +29,8 @@ public class Main{
         else {
             for(Contrainte c : contraintes){
                 c.affiche();
-                c.action(c.executeCorps(db), db);
+                String req = c.executeCorps(db);
+                while(c.action(req, db) == 1);
                 System.out.println("\n");
             }    
         }
