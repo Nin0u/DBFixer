@@ -94,13 +94,19 @@ public abstract class Contrainte {
             }
             left = tLeft.get(0) + "." + left;
 
-            String right = attr[1].getNom();
-            ArrayList<String> tRight = mapAttrTable.get(attr[1]);
-            if(tRight == null) {
-                System.out.println("pbm right");
-                return null;
+            String right = "";
+            if(attr[1] instanceof Constante) {
+                Constante c = (Constante)attr[1];
+                right = c.getValeur();
+            } else {
+                right = attr[1].getNom();
+                ArrayList<String> tRight = mapAttrTable.get(attr[1]);
+                if(tRight == null) {
+                    System.out.println("pbm right");
+                    return null;
+                }
+                right = tRight.get(0) + "." + right;
             }
-            right = tRight.get(0) + "." + right;
             where += left + "=" + right + " AND ";
         }
 
