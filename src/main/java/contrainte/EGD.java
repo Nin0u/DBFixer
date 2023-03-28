@@ -179,6 +179,7 @@ public class EGD extends Contrainte {
         return list.get(list.size() - 1);
     }
 
+    /** Méthode d'affichage */
     public void affiche(){
         System.out.println("===========  EGD ==============");
         System.out.println("---- Corps ----");

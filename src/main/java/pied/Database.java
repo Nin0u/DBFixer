@@ -1,6 +1,5 @@
 package pied;
 
-import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -11,28 +10,32 @@ public class Database {
     private String url;
     private String user;
     private String password;
+
+    // ! On doit se déconecter à chaque fois
     private Connection conn;
 
+    /** Constructeur */
     public Database(String url, String user, String password) {
         this.url = url;
         this.user = user;
         this.password = password;
-
     }
     
+    /** Connexion a la BD */
     private Connection connect() {
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(url, user, password);
             System.out.println("Connected to the PostgreSQL server successfully.");
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             System.exit(1);
         }
 
         return conn;
     }
 
+    /** Traite une requete SELECT */
     public ResultSet selectRequest(String selectSQL){
         conn = connect();
         ResultSet res = null;
@@ -41,34 +44,26 @@ public class Database {
             res = pstmt.executeQuery();
             conn.close();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
 
         return res;
     }
 
     public ResultSet selectUpdate(String selectSQL) {
-        ResultSet rs = null;
+        ResultSet res = null;
         conn = connect();
         try {
             PreparedStatement stmt = conn.prepareStatement(selectSQL,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_UPDATABLE);
-            rs = stmt.executeQuery();
-            //conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return rs;
-    }
-
-    public void closeConnexion() {
-        try {
+            res = stmt.executeQuery();
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        return res;
     }
 
     public int updateRequest(String updateSQL) {
@@ -80,7 +75,7 @@ public class Database {
             res = pstmt.executeUpdate();
             conn.close();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         
         return res;
