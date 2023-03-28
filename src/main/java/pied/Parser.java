@@ -96,7 +96,7 @@ public class Parser {
             
             // Regex pour test si egalite ou relation
             // ! Remarque : Une egalite est de la forme x # y, le = servant aux constantes
-            String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_[0-9]+)?(?:=[a-zA-Z0-9]+)?";
+            String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_[0-9]+)?(?:=[a-zA-Z0-9]+|='[a-zA-Z0-9]+')?";
             Pattern p_egalite = Pattern.compile("\\([ ]*" + var_regex + "[ ]*#[ ]*" + var_regex + "[ ]*\\)");
             Pattern p_relation = Pattern.compile("[a-zA-Z]+[a-zA-Z0-9]*[ ]*\\([ ]*" + var_regex + "(,[ ]*"  + var_regex + "[ ]*)*" + "[ ]*\\)");
             
@@ -119,7 +119,7 @@ public class Parser {
                     
                     // On a qu'un attribut
                     if (t.length == 1) {
-                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0
+                        // Pour les attributs : Soit on a un indice _i soit rien et dans ce cas l'indice est 0 par défaut
                         if (t[0].contains("_")){
                             String[] var = t[0].split("_");
                             // cas d'erreur
@@ -127,9 +127,9 @@ public class Parser {
                             
                             // Cas ou on a un indice
                             if (var[1].matches("[0-9]+"))
-                            variables[i] = new Attribut(var[0], Integer.parseInt(var[1]));
+                                variables[i] = new Attribut(var[0], Integer.parseInt(var[1]));
                             
-                            // Autre cas : erreur
+                            // L'indice n'est pas un nombre : erreur
                             else return false;
                         }
                         
@@ -147,14 +147,14 @@ public class Parser {
                             
                             // Cas ou on a un indice
                             if (var[1].matches("[0-9]+"))
-                            variables[i] = new Constante(var[0], Integer.parseInt(var[1]), t[1]);
+                                variables[i] = new Attribut(var[0], Integer.parseInt(var[1]), t[1]);
                             
                             // Autre cas : erreur
                             else return false;
                         }
                         
                         // Pas d'indice ; on met par défaut à 0
-                        else variables[i] = new Constante(t[0], 0,t[1]);
+                        else variables[i] = new Attribut(t[0], 0, t[1]);
                     }
                 }
                 
@@ -218,14 +218,14 @@ public class Parser {
                             
                             // Cas ou on a un indice
                             if (var[1].matches("[0-9]+"))
-                                r.addVar(new Constante(var[0], Integer.parseInt(var[1]), t[1]));
+                                r.addVar(new Attribut(var[0], Integer.parseInt(var[1]), t[1]));
                                 
                                 // Autre cas : erreur
                                 else return false;
                             }
                             
                             // Pas d'indice ; on met par défaut à 0
-                            else r.addVar(new Constante(t[0], 0,t[1]));
+                            else r.addVar(new Attribut(t[0], 0, t[1]));
                         }
                     }
                     rel.add(r);

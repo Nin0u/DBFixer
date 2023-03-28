@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import atome.*;
 import pied.Database;
 import variable.Attribut;
-import variable.Constante;
 
 public class EGD extends Contrainte {
 
@@ -55,16 +54,15 @@ public class EGD extends Contrainte {
                     ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
 
                     //Cas constante
-                    if(attr[1] instanceof Constante) {
-                        Constante c = (Constante)attr[1];
-                        String val = c.getValeur();
-                        if(c.getValeur().charAt(0) == '\'') {
+                    if(attr[1].getValeur() != null) {
+                        String val = attr[1].getValeur();
+                        if(attr[1].getValeur().charAt(0) == '\'') {
                             val = val.substring(1, val.length() - 1);
                         }
                         for(int li : indexLeft) {
                             if(!T.getString(li + 1).equals(val)) {
                                 System.out.println(T.getString(li + 1) + " " + val);
-                                updateDBCons(T, db, li, rsmd, attr, c, orderAttribut, cut, ordRelations);
+                                updateDBCons(T, db, li, rsmd, attr, 1, orderAttribut, cut, ordRelations);
                                 end = true;
                                 return 1;
                             }
@@ -92,7 +90,6 @@ public class EGD extends Contrainte {
             }
             return 0;
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             return -1;
         }
@@ -129,9 +126,9 @@ public class EGD extends Contrainte {
         // return 1;  
     }
 
-    private void updateDBCons(ResultSet T, Database db, int li, ResultSetMetaData rsmd, Attribut[] attr, Constante c, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
+    private void updateDBCons(ResultSet T, Database db, int li, ResultSetMetaData rsmd, Attribut[] attr, int index, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         String update = "UPDATE " + ordRelations.get(li).getNomTable() + " SET ";
-        update += attr[0].getNom() + " = " + c.getValeur() + " ";
+        update += attr[0].getNom() + " = " + attr[index].getValeur() + " ";
         update += "WHERE ";
 
         int min = getMin(cut, li);

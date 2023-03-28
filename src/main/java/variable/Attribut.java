@@ -1,14 +1,25 @@
 package variable;
 
-public class Attribut extends Variable {
-    protected String nom;
-    protected int indice;
+public class Attribut{
+    private String nom;
+    private int indice;
+    private String valeur;
+
 
     /** Constructeur */
     public Attribut(String nom, int indice){
         super();
         this.nom = nom;
         this.indice = indice;
+        this.valeur = null;
+    }
+
+    /** Constructeur */
+    public Attribut(String nom, int indice, String valeur){
+        super();
+        this.nom = nom;
+        this.indice = indice;
+        this.valeur = valeur;
     }
 
     /** Getter */
@@ -21,6 +32,11 @@ public class Attribut extends Variable {
         return indice;
     }
 
+    /** Getter */
+    public String getValeur(){
+        return valeur;
+    }
+
     /** Setter */
     public void setNom(String nom){
         this.nom = nom;
@@ -31,9 +47,16 @@ public class Attribut extends Variable {
         this.indice = indice;
     }
 
+    /** Setter */
+    public void setValeur(String valeur){
+        this.valeur = valeur;
+    }
+
     /** Méthode d'affichage */
     public void affiche(){
-        System.out.println("Attribut : " + nom + " Indice : " + String.valueOf(indice));
+        System.out.print("Attribut : " + nom + " Indice : " + String.valueOf(indice));
+        if (valeur != null) System.out.print(" Valeur : " + valeur);
+        System.out.println("");
     }
 
     @Override

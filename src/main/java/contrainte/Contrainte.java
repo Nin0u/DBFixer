@@ -7,7 +7,6 @@ import java.util.HashMap;
 import atome.*;
 import pied.Database;
 import variable.Attribut;
-import variable.Constante;
 
 public abstract class Contrainte {
     /**
@@ -66,9 +65,8 @@ public abstract class Contrainte {
             from += rel.getNomTable() + " " + map.get(rel) + ", ";
             for(Attribut a : rel.getMembres()) {
                 select += map.get(rel) + "." + a.getNom() + ", ";
-                if(a instanceof Constante) {
-                    Constante c = (Constante)a;
-                    where += map.get(rel) + "." + c.getNom() + "=" + c.getValeur() + " AND ";
+                if(a.getValeur() != null) {
+                    where += map.get(rel) + "." + a.getNom() + "=" + a.getValeur() + " AND ";
                 }
                 ArrayList<String> l = mapAttrTable.get(a);
                 if(l == null) l = new ArrayList<>();
@@ -95,9 +93,8 @@ public abstract class Contrainte {
             left = tLeft.get(0) + "." + left;
 
             String right = "";
-            if(attr[1] instanceof Constante) {
-                Constante c = (Constante)attr[1];
-                right = c.getValeur();
+            if(attr[1].getValeur() != null) {
+                right = attr[1].getValeur();
             } else {
                 right = attr[1].getNom();
                 ArrayList<String> tRight = mapAttrTable.get(attr[1]);

@@ -2,7 +2,6 @@ package atome;
 import java.util.ArrayList;
 
 import variable.Attribut;
-import variable.Variable;
 
 public class Relation{
     /** Un relation contient plusieurs variables qui sont soit des constantes soit des attributs */
@@ -36,8 +35,8 @@ public class Relation{
     public void affiche(){
         System.out.println("-- Relation --");
         System.out.println("Table = " + nomTable);
-        for (Variable v : membres) 
-            v.affiche();
+        for (Attribut a : membres) 
+            a.affiche();
 
         System.out.println("-- Fin --");
     }
