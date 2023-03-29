@@ -10,10 +10,17 @@ import pied.Database;
 import variable.Attribut;
 
 public class EGD extends Contrainte {
+    private ArrayList<Egalite> egTete;
 
     /** Constructeur */
     public EGD(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete){
-        super(rlCorps,egCorps,egTete);
+        super(rlCorps, egCorps);
+        
+        this.egTete = egTete;
+    }
+    /** Getter */
+    public ArrayList<Egalite> getEgTete() {
+        return egTete;
     }
 
     /** 
@@ -42,7 +49,7 @@ public class EGD extends Contrainte {
         
         try {
             ResultSetMetaData rsmd = T.getMetaData();
-            boolean end = false;
+            boolean end = false; // Sert à r 
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");

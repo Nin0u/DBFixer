@@ -10,25 +10,21 @@ import variable.Attribut;
 
 public abstract class Contrainte {
     /**
-     * Le corps est une conjonction d'atomes qui sont soit des relations soit des egalités
-     * On décide de stocker ça dans deux listes
+     * Le corps est une conjonction d'atomes qui sont:
+     * - Des relations pour les TGD
+     * - Des relations et des egalités pour les EGS
+     * 
+     * On stocke les relations dans la superclasse.
      */
     protected ArrayList<Relation> rlCorps;
+
+    /** On laisse les egalites du corps ici pour executeCorps */
     protected ArrayList<Egalite> egCorps;
 
-    /**
-     * La tête est une conjonction d'égalité si la contrainte est une EGD.
-     * Dans le cas d'une TGD il faut une liste de Relation en plus.
-     * 
-     *  Pour profiter de l'héritage on définit la conjonction d'égalité ici.
-     */
-    protected ArrayList<Egalite> egTete;
-
     /** Constructeur */
-    protected Contrainte(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete) {
+    protected Contrainte(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps) {
         this.rlCorps = rlCorps;
         this.egCorps = egCorps;
-        this.egTete = egTete;
     }
 
     /** Getter */
@@ -39,11 +35,6 @@ public abstract class Contrainte {
     /** Getter */
     public ArrayList<Egalite> getEgCorps() {
         return egCorps;
-    }
-
-    /** Getter */
-    public ArrayList<Egalite> getEgTete() {
-        return egTete;
     }
 
     public String executeCorps(Database db) {
@@ -81,30 +72,32 @@ public abstract class Contrainte {
         }
         from = from.substring(0, from.length() - 2);
         select = select.substring(0, select.length() - 2);
-
-        for(Egalite eg : egCorps) {
-            Attribut[] attr = eg.getMembres();
-            String left = attr[0].getNom();
-            ArrayList<String> tLeft = mapAttrTable.get(attr[0]);
-            if(tLeft == null) {
-                System.out.println("pbm left");
-                return null;
-            }
-            left = tLeft.get(0) + "." + left;
-
-            String right = "";
-            if(attr[1].getValeur() != null) {
-                right = attr[1].getValeur();
-            } else {
-                right = attr[1].getNom();
-                ArrayList<String> tRight = mapAttrTable.get(attr[1]);
-                if(tRight == null) {
-                    System.out.println("pbm right");
+        
+        if (egCorps != null) {
+            for(Egalite eg : egCorps) {
+                Attribut[] attr = eg.getMembres();
+                String left = attr[0].getNom();
+                ArrayList<String> tLeft = mapAttrTable.get(attr[0]);
+                if(tLeft == null) {
+                    System.out.println("pbm left");
                     return null;
                 }
-                right = tRight.get(0) + "." + right;
+                left = tLeft.get(0) + "." + left;
+
+                String right = "";
+                if(attr[1].getValeur() != null) {
+                    right = attr[1].getValeur();
+                } else {
+                    right = attr[1].getNom();
+                    ArrayList<String> tRight = mapAttrTable.get(attr[1]);
+                    if(tRight == null) {
+                        System.out.println("pbm right");
+                        return null;
+                    }
+                    right = tRight.get(0) + "." + right;
+                }
+                where += left + "=" + right + " AND ";
             }
-            where += left + "=" + right + " AND ";
         }
 
         for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
@@ -125,9 +118,7 @@ public abstract class Contrainte {
             req += " " + where;
         }
 
-
         System.out.println(req);
-
         return req;
     }
 

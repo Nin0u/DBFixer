@@ -63,10 +63,12 @@ public class Parser {
             }
 
             // On insère une TGD ou une EGD dans les contraintes en fonction des elements de la tete
-            if(relation_tete.size() == 0)
+            if(egalite_tete.size() == 0 || egalite_corps.size() == 0)
+                c.add(new TGD(relation_corps, relation_tete));
+            else if (relation_tete.size() == 0)
                 c.add(new EGD(relation_corps, egalite_corps, egalite_tete));
-            else
-                c.add(new TGD(relation_corps, egalite_corps, egalite_tete, relation_tete));
+            else 
+                System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une TGD ou EGD , elle sera retirée.");
         }
 
         sc.close();

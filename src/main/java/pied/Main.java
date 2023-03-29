@@ -8,24 +8,65 @@ import java.util.ArrayList;
 import contrainte.*;
 
 public class Main{
+    // Arguments qu'on peut passer au main
+    public static final String DFP = "-dfp="; // DF Path
+    public static final String DBLP = "-dblp="; // DB Login Path
+    public static InputStream is = System.in;
+    public static InputStream login = System.in;
+
     public static void main(String[] args){
-        InputStream is = System.in;
-        if (args.length > 1){
-            System.out.println("Nombre d'arguments invalides : accepte 0 ou 1 argument.");
+        if (args.length > 2){
+            System.out.println("Nombre d'arguments invalide.");
+            printHelp();
             return;
-        } else if (args.length == 1){
-            try {
-                is = new FileInputStream(new File(args[0]));
-            } catch (FileNotFoundException e) {
-                System.out.println("File not found : " + args[0]);
-                return;
+        } 
+
+        try {
+            if(args.length == 1){
+                if (args[0].startsWith(DFP)){
+                    String a = args[0].substring(DFP.length());
+                    is = new FileInputStream(new File(a));
+                } else if (args[0].startsWith(DBLP)){
+                    String a = args[0].substring(DBLP.length());
+                    login = new FileInputStream(new File(a));
+                } else {
+                    System.out.println("Arguments Invalides");
+                    printHelp();
+                }
             }
+            else if (args.length == 2){
+                if (args[0].startsWith(DFP)){
+                    String a = args[0].substring(DFP.length());
+                    is = new FileInputStream(new File(a));
+                } else if (args[0].startsWith(DBLP)){
+                    String a = args[0].substring(DBLP.length());
+                    login = new FileInputStream(new File(a));
+                } else {
+                    System.out.println("Arguments Invalides");
+                    printHelp();
+                }
+
+                if (args[1].startsWith(DFP)){
+                    String a = args[1].substring(DFP.length());
+                    is = new FileInputStream(new File(a));
+                } else if (args[1].startsWith(DBLP)){
+                    String a = args[1].substring(DBLP.length());
+                    login = new FileInputStream(new File(a));
+                } else {
+                    System.out.println("Arguments Invalides");
+                    printHelp();
+                }
+            }
+        } catch (FileNotFoundException e){ 
+            e.printStackTrace();
+            return;
         }
-        //TODO: Faire en sorte qu'on puisse rentrer ces données dedans via un fichier ou dans le terminal
-        Database db = new Database("jdbc:postgresql://localhost/bd", "yoan", "yoyo");
+
+        // "jdbc:postgresql://localhost/nico", "nico", "nico"
+        Database db = new Database(login);
         ArrayList<Contrainte> contraintes = Parser.parse(is);
 
-        if (contraintes == null) System.out.println("contraintes null");
+        if (contraintes == null) System.out.println("Contraintes null");
         else {
             for(Contrainte c : contraintes){
                 c.affiche();
@@ -34,5 +75,12 @@ public class Main{
                 System.out.println("\n");
             }    
         }
+    }
+
+    public static void printHelp(){
+        System.out.println("Arguments acceptés :");
+        System.out.println(DFP + "[path]");
+        System.out.println(DBLP + "[path]");
+        System.out.println("ATTENTION : il ne faut aucun espace entre -, option, = et [path].");
     }
 }

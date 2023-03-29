@@ -1,6 +1,5 @@
 package contrainte;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import atome.*;
 import pied.Database;
@@ -9,8 +8,8 @@ public class TGD extends Contrainte {
     private ArrayList<Relation> rlTete;
 
     /** Constructeur */
-    public TGD(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete, ArrayList<Relation> rlTete){
-        super(rlCorps, egCorps, egTete);
+    public TGD(ArrayList<Relation> rlCorps, ArrayList<Relation> rlTete){
+        super(rlCorps, null);
         this.rlTete = rlTete;
     }
 
@@ -34,15 +33,9 @@ public class TGD extends Contrainte {
         for (Relation r : rlCorps)
             r.affiche();
 
-        for(Egalite e : egCorps)
-            e.affiche();
-
         System.out.println("---- Tete ----");
         for (Relation r : rlTete)
             r.affiche();
-
-        for (Egalite e : egTete)
-            e.affiche(); 
 
         System.out.println("=========== FIN TGD ==============");
     }

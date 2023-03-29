@@ -1,5 +1,8 @@
 package pied;
 
+import java.io.InputStream;
+import java.util.Scanner;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,10 +18,19 @@ public class Database {
     private Connection conn;
 
     /** Constructeur */
-    public Database(String url, String user, String password) {
+    public Database(InputStream is){
+        Scanner sc = new Scanner(is);
+        if(is.equals(System.in)) System.out.print("URL = ");
+        String url = sc.nextLine();
+        if(is.equals(System.in)) System.out.print("user = ");
+        String user = sc.nextLine();
+        if(is.equals(System.in)) System.out.print("password = ");
+        String password = sc.nextLine();
         this.url = url;
         this.user = user;
         this.password = password;
+
+        sc.close();
     }
     
     /** Connexion a la BD */
