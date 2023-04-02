@@ -9,15 +9,21 @@ import atome.*;
 import pied.Database;
 import variable.Attribut;
 
+/**
+ * Equality Generating Dependency :
+ * - Le corps est une conjonction d'atomes relationnels et d'égalités.
+ * - La tête est une conjonction d'atomes d'égalité.
+ */
 public class EGD extends Contrainte {
+    /** Liste des égalités dans la tête. */
     private ArrayList<Egalite> egTete;
 
     /** Constructeur */
     public EGD(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete){
         super(rlCorps, egCorps);
-        
         this.egTete = egTete;
     }
+
     /** Getter */
     public ArrayList<Egalite> getEgTete() {
         return egTete;
@@ -25,7 +31,9 @@ public class EGD extends Contrainte {
 
     /** 
      * Egaliser les tuples de T en accord avec la contrainte this
-     * @param T Un tuple qui satisfait le corps mais pas la tête de e
+     * 
+     * @param req la requête permettant d'obtenir les tuples qui respecte le corps mais pas la tête d'une DF
+     * @param db la base de donnée
      */
     public int action(String req, Database db){
         int nb = 0;
