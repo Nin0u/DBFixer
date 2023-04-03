@@ -52,7 +52,6 @@ public class TGD extends Contrainte {
 
             // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
             ArrayList<Attribut> orderAttribut = new ArrayList<>();
-
             for(Relation rel : rlCorps) {
                 for(Attribut a : rel.getMembres())
                     orderAttribut.add(a);
@@ -66,22 +65,26 @@ public class TGD extends Contrainte {
                     ArrayList<Integer> attrLies = new ArrayList<Integer>();
                     ArrayList<Integer> attrLibres = new ArrayList<Integer>();
                     for(int i = 0; i < orderAttribut.size(); i++){
+                        boolean eq = false;
                         for (Attribut a2 : r2.getMembres()){
-                            if (orderAttribut.get(i).equals(a2))
+                            if (orderAttribut.get(i).equals(a2)){
                                 attrLies.add(i);
-                            else 
-                                attrLibres.add(i);
+                                eq = true;
+                            }
+                               
                         }
+                        if (!eq) attrLibres.add(i);
                     }
 
                     // Vérifier si on a un tuple
                     // Si on en a un c'est ok on continue
-                    String verifReq = buildVerifReq(r2, T, orderAttribut, attrLies, attrLibres);
+                    String verifReq = buildVerifReq(r2, T, rsmd, orderAttribut, attrLies, attrLibres);
+                    System.out.println(verifReq);
                     ResultSet res = db.selectRequest(verifReq);
-                    if (res.next()) continue;
-                    
-                    // Autre cas : on doit ajouter un tuple
-                    else {
+
+                    // On doit ajouter un tuple si il n'y a rien
+                    if (!res.next()) {
+                        System.out.println("Ajout de tuple");
                         // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
                         // Si ce n'est pas le cas on doit alterer la table
                         for(Integer index : attrLibres){
@@ -89,6 +92,7 @@ public class TGD extends Contrainte {
                             if(!columnTypeName.startsWith("NULL_")){
                                 String alterReq = buildCreateTypeReq(rsmd.getColumnName(index), columnTypeName, r2.getNomTable());
                                 db.selectRequest(alterReq);
+                                System.out.println("Create Type NULL_" + columnTypeName);
                             }
                         }
 
@@ -96,10 +100,11 @@ public class TGD extends Contrainte {
                         String insertReq = buildInsertReq(r2, T, rsmd, orderAttribut, attrLies);
                         db.selectRequest(insertReq);
                     }
+
                 }
             }
 
-            return 1;
+            return 0;
         } catch (SQLException e){
             e.printStackTrace();
             return -1;
@@ -119,26 +124,32 @@ public class TGD extends Contrainte {
      * @return La requête de vérification
      * @throws SQLException
      */
-    private String buildVerifReq(Relation r2, ResultSet T, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
-        String req = "SELECT * FROM " + r2.getNomTable() + " WHERE ";
+    private String buildVerifReq(Relation r2, ResultSet T, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+        String req = "SELECT * FROM " + r2.getNomTable();
+        
+        String where = " WHERE ";
         boolean atLeastOneCondition = false;
         for(Integer index : attrLies) {
-            if (atLeastOneCondition) req += " AND ";
+            if (atLeastOneCondition) where += " AND ";
             else atLeastOneCondition = true;
 
-            req += orderAttribut.get(index).getNom() + "=" + T.getObject(index);
+            Object value = T.getObject(orderAttribut.get(index).getNom());
+            if (isWriteType(rsmd.getColumnType( T.findColumn(orderAttribut.get(index).getNom()))))
+                value = "'" + value + "'";
+            where += orderAttribut.get(index).getNom() + "=" + value;
         }
 
         for (Integer index : attrLibres){
-            if (atLeastOneCondition) req += " AND ";
+            if (atLeastOneCondition) where += " AND ";
             else atLeastOneCondition = true;
 
             String value = orderAttribut.get(index).getValeur();
             if(value != null){
-                req += orderAttribut.get(index).getNom() + "=" + value;
+                where += orderAttribut.get(index).getNom() + "=" + value;
             }
         }
-        return req;
+
+        return req + where;
     }
 
     /**
