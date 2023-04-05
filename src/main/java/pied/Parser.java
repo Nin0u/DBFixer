@@ -63,7 +63,7 @@ public class Parser {
             }
 
             // On insère une TGD ou une EGD dans les contraintes en fonction des elements de la tete
-            if(egalite_tete.size() == 0 || egalite_corps.size() == 0)
+            if(egalite_tete.size() == 0 && egalite_corps.size() == 0)
                 c.add(new TGD(relation_corps, relation_tete));
             else if (relation_tete.size() == 0)
                 c.add(new EGD(relation_corps, egalite_corps, egalite_tete));
