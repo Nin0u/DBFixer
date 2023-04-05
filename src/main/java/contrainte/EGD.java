@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import atome.*;
 import pied.Database;
@@ -27,6 +28,55 @@ public class EGD extends Contrainte {
     /** Getter */
     public ArrayList<Egalite> getEgTete() {
         return egTete;
+    }
+
+    public void repairType(Database db) throws SQLException {
+        super.repairType(db);
+        HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
+        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+
+        // On constuit nos structures
+        for(Relation rel : rlCorps) {
+            if(mapTableData.get(rel.getNomTable()) == null) {
+                mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
+            }
+            for(Attribut att : rel.getMembres()) {
+                ArrayList<String> l = mapAttrTable.get(att);
+                if(l == null) l = new ArrayList<>();
+                l.add(rel.getNomTable());
+                mapAttrTable.put(att, l);
+            }
+        }
+
+        
+        if (egTete != null) {
+            for(Egalite eg : egTete) {
+                Attribut[] attr = eg.getMembres();
+                String table1 = mapAttrTable.get(attr[0]).get(0);
+                String table2 = mapAttrTable.get(attr[1]).get(0);
+                System.out.println(table1 + " " + table2);
+                int index1 = 1;
+                while(index1 <= mapTableData.get(table1).getColumnCount()) {
+                    if(mapTableData.get(table1).getColumnLabel(index1).equals(attr[0].getNom())) break;
+                    index1++;
+                }
+
+                int index2 = 1;
+                while(index2 <= mapTableData.get(table2).getColumnCount()) {
+                    if(mapTableData.get(table2).getColumnLabel(index2).equals(attr[1].getNom())) break;
+                    index2++;
+                }
+
+                if(mapTableData.get(table1).getColumnTypeName(index1).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(index2).startsWith("null")) {
+                    changeType(db, attr[1].getNom(), mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
+                }
+
+                if(mapTableData.get(table2).getColumnTypeName(index2).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(index1).startsWith("null")) {
+                    changeType(db, attr[0].getNom(), mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
+                }
+            }
+        }
+
     }
 
     /** 
@@ -170,7 +220,7 @@ public class EGD extends Contrainte {
             index++;
         }
         return l;
-    } 
+    }
 
     private int getMax(ArrayList<Integer> list, int a) {
         for(int elt : list) {

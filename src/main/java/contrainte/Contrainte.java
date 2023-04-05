@@ -53,6 +53,7 @@ public abstract class Contrainte {
         }   
 
         HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+        HashMap<Attribut, ArrayList<String>> mapAttrTable2 = new HashMap<>();
 
         for(Relation rel : rlCorps) {
             from += rel.getNomTable() + " " + map.get(rel) + ", ";
@@ -71,6 +72,11 @@ public abstract class Contrainte {
                 if(l == null) l = new ArrayList<>();
                 l.add(map.get(rel));
                 mapAttrTable.put(a, l);
+
+                l = mapAttrTable2.get(a);
+                if(l == null) l = new ArrayList<>();
+                l.add(rel.getNomTable());
+                mapAttrTable2.put(a, l);
             }
         }
 
@@ -95,7 +101,11 @@ public abstract class Contrainte {
                 String right = "";
                 if(attr[1].getValeur() != null) {
                     right = attr[1].getValeur();
-                    //TODO: REGLER CE CAS PLUS TARD
+                    String table = mapAttrTable2.get(attr[1].getNom()).get(0);
+                    String type = getType(db, table, attr[1].getNom());
+                    if(type != null && type.startsWith("null")) 
+                        right += "::" + type;
+
                 } else {
                     right = attr[1].getNom();
                     ArrayList<String> tRight = mapAttrTable.get(attr[1]);
@@ -192,17 +202,17 @@ public abstract class Contrainte {
                 }
 
                 if(mapTableData.get(table1).getColumnTypeName(index1).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(index2).startsWith("null")) {
-                    changeType(db, table2, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
+                    changeType(db, attr[1].getNom(), mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
                 }
 
                 if(mapTableData.get(table2).getColumnTypeName(index2).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(index1).startsWith("null")) {
-                    changeType(db, table1, mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
+                    changeType(db, attr[0].getNom(), mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
                 }
             }
         }
     }
 
-    private void changeType(Database db, String nomAttr, ArrayList<String> tables, HashMap<String, ResultSetMetaData> mapTableData, String nomType) throws SQLException {
+    protected void changeType(Database db, String nomAttr, ArrayList<String> tables, HashMap<String, ResultSetMetaData> mapTableData, String nomType) throws SQLException {
         for(String table : tables) {
             int index = 1;
             while(index <= mapTableData.get(table).getColumnCount()) {

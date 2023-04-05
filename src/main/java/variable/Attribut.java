@@ -63,8 +63,9 @@ public class Attribut{
     public boolean equals(Object o) {
         if(!(o instanceof Attribut)) return false;
         Attribut a = (Attribut)o;
-        if ((a.valeur == null && this.valeur != null) || (a.valeur != null && this.valeur == null)) return false;
-        if ((a.valeur == null && this.valeur == null))
+        //if ((a.valeur == null && this.valeur != null) || (a.valeur != null && this.valeur == null)) return false;
+
+        if ((a.valeur == null || this.valeur == null))
             return (a.nom.equals(this.nom)) && (a.indice == this.indice);
         else 
             return (a.nom.equals(this.nom)) && (a.indice == this.indice) && (a.valeur == this.valeur);

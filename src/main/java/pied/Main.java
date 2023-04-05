@@ -76,7 +76,10 @@ public class Main{
                 c.repairType(db);
                 System.out.println("FIN REPAIR !");
                 String req = c.executeCorps(db);
-                while(c.action(req, db) == 1);
+                int i = 0;
+                while(c.action(req, db) == 1 && i < 3) {
+                    i++;
+                }
                 db.close();
                 System.out.println("\n");
             }    
