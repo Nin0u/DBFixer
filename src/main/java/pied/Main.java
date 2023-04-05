@@ -1,6 +1,7 @@
 package pied;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.File;
@@ -14,7 +15,7 @@ public class Main{
     public static InputStream is = System.in;
     public static InputStream login = System.in;
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws SQLException{
         if (args.length > 2){
             System.out.println("Nombre d'arguments invalide.");
             printHelp();
@@ -70,7 +71,12 @@ public class Main{
         else {
             for(Contrainte c : contraintes){
                 c.affiche();
+                System.out.println("DEBUT REPAIR");
+                db.connect();
+                c.repairType(db);
+                System.out.println("FIN REPAIR !");
                 String req = c.executeCorps(db);
+                db.close();
                 while(c.action(req, db) == 1);
                 System.out.println("\n");
             }    

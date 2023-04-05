@@ -1,5 +1,5 @@
 # Execution des scripts SQL
-psql -d $3 -c "\i table.sql"
+#psql -d $3 -c "\i table.sql"
 
 # Execution du code java
 mvn clean

@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 
 public class Database {
     private String url;
@@ -34,21 +35,22 @@ public class Database {
     }
     
     /** Connexion a la BD */
-    private Connection connect() {
-        Connection conn = null;
+    public void connect() {
         try {
             conn = DriverManager.getConnection(url, user, password);
         } catch (SQLException e) {
             e.printStackTrace();
             System.exit(1);
         }
+    }
 
-        return conn;
+    public void close() throws SQLException {
+        conn.close();
     }
 
     /** Traite une requete SELECT */
     public ResultSet selectRequest(String selectSQL){
-        conn = connect();
+        connect();
         ResultSet res = null;
         try {
             PreparedStatement pstmt = conn.prepareStatement(selectSQL);
@@ -63,7 +65,7 @@ public class Database {
 
     public ResultSet selectUpdate(String selectSQL) {
         ResultSet res = null;
-        conn = connect();
+        connect();
         try {
             PreparedStatement stmt = conn.prepareStatement(selectSQL,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -78,7 +80,7 @@ public class Database {
     }
 
     public int updateRequest(String updateSQL) {
-        conn = connect();
+        connect();
         int res = 0;
 
         try {
@@ -90,5 +92,32 @@ public class Database {
         }
         
         return res;
+    }
+
+    public ResultSetMetaData getMetaData(String nomTable) {
+        ResultSetMetaData res = null;
+        try {
+            String SQL = "select * from " + nomTable + " where 1<0";
+            PreparedStatement pstmt = conn.prepareStatement(SQL);
+            ResultSet r = pstmt.executeQuery();
+            res = r.getMetaData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    public void ChangeType(String nomTable, String type, String attr) {
+        String req = "ALTER TABLE " + nomTable + 
+        " ALTER COLUMN " + attr + " TYPE " + type +
+        " USING " + attr + "::" + type;
+        System.out.println(req);
+        PreparedStatement pstmt;
+        try {
+            pstmt = conn.prepareStatement(req);
+            pstmt.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,5 +1,7 @@
 package contrainte;
 
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +39,7 @@ public abstract class Contrainte {
         return egCorps;
     }
 
-    public String executeCorps(Database db) {
+    public String executeCorps(Database db) throws SQLException {
         String select = "SELECT ";
         String from = "FROM ";
         String where = "WHERE ";
@@ -57,7 +59,13 @@ public abstract class Contrainte {
             for(Attribut a : rel.getMembres()) {
                 select += map.get(rel) + "." + a.getNom() + ", ";
                 if(a.getValeur() != null) {
-                    where += map.get(rel) + "." + a.getNom() + "=" + a.getValeur() + " AND ";
+                    String type = getType(db, rel.getNomTable(), a.getNom());
+                    where += map.get(rel) + "." + a.getNom() + "=" + a.getValeur();
+                    if(type != null && type.startsWith("null")) {
+                        where += "::" + type;
+                    } 
+                     
+                    where += " AND ";
                 }
                 ArrayList<String> l = mapAttrTable.get(a);
                 if(l == null) l = new ArrayList<>();
@@ -87,6 +95,7 @@ public abstract class Contrainte {
                 String right = "";
                 if(attr[1].getValeur() != null) {
                     right = attr[1].getValeur();
+                    //TODO: REGLER CE CAS PLUS TARD
                 } else {
                     right = attr[1].getNom();
                     ArrayList<String> tRight = mapAttrTable.get(attr[1]);
@@ -122,6 +131,103 @@ public abstract class Contrainte {
         return req;
     }
 
+    // But est de mettre les types NULL_* dans les bonnes colonnes pour eviter de planter les requetes plus tard
+    public void repairType(Database db) throws SQLException {
+        HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
+        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+
+        // On constuit nos structures
+        for(Relation rel : rlCorps) {
+            if(mapTableData.get(rel.getNomTable()) == null) {
+                mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
+            }
+            for(Attribut att : rel.getMembres()) {
+                ArrayList<String> l = mapAttrTable.get(att);
+                if(l == null) l = new ArrayList<>();
+                l.add(rel.getNomTable());
+                mapAttrTable.put(att, l);
+            }
+        }
+
+        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
+            String nomAttr = entry.getKey().getNom();
+            boolean change = false;
+            String nomType = "";
+            for(String table : entry.getValue()) {
+                int index = 1;
+                while(index <= mapTableData.get(table).getColumnCount()) {
+                    if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
+                    index++;
+                }
+                if(index > mapTableData.get(table).getColumnCount()) {
+                    System.out.println("Error Repair !");
+                    System.exit(1);
+                }
+                if(mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
+                    change = true;
+                    nomType = mapTableData.get(table).getColumnTypeName(index);
+                    break;
+                }
+            } 
+            if(change) {
+                changeType(db, nomAttr, entry.getValue(), mapTableData, nomType);
+            }
+        }
+
+        if (egCorps != null) {
+            for(Egalite eg : egCorps) {
+                Attribut[] attr = eg.getMembres();
+                String table1 = mapAttrTable.get(attr[0]).get(0);
+                String table2 = mapAttrTable.get(attr[1]).get(0);
+                int index1 = 1;
+                while(index1 <= mapTableData.get(table1).getColumnCount()) {
+                    if(mapTableData.get(table1).getColumnLabel(index1).equals(attr[0].getNom())) break;
+                    index1++;
+                }
+
+                int index2 = 1;
+                while(index2 <= mapTableData.get(table2).getColumnCount()) {
+                    if(mapTableData.get(table2).getColumnLabel(index2).equals(attr[1].getNom())) break;
+                    index2++;
+                }
+
+                if(mapTableData.get(table1).getColumnTypeName(index1).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(index2).startsWith("null")) {
+                    changeType(db, table2, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
+                }
+
+                if(mapTableData.get(table2).getColumnTypeName(index2).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(index1).startsWith("null")) {
+                    changeType(db, table1, mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
+                }
+            }
+        }
+    }
+
+    private void changeType(Database db, String nomAttr, ArrayList<String> tables, HashMap<String, ResultSetMetaData> mapTableData, String nomType) throws SQLException {
+        for(String table : tables) {
+            int index = 1;
+            while(index <= mapTableData.get(table).getColumnCount()) {
+                if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
+                index++;
+            }
+
+            if(!mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
+                db.ChangeType(table, nomType, nomAttr);
+                mapTableData.put(table, db.getMetaData(table));
+            }
+            
+        }
+    }
+
+    private String getType(Database db, String table, String attr) throws SQLException {
+        ResultSetMetaData r = db.getMetaData(table);
+        int index = 1;
+        while(index <= r.getColumnCount()) {
+            if(r.getColumnLabel(index).equals(attr)) break;
+            index++;
+        }
+        if(index > r.getColumnCount()) return null;
+        return r.getColumnTypeName(index);
+    }
 
     protected boolean isWriteType(int t) {
         return (t == Types.VARCHAR) ||
