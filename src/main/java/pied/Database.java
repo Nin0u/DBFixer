@@ -1,8 +1,9 @@
 package pied;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Scanner;
-
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,7 +16,6 @@ public class Database {
     private String user;
     private String password;
 
-    // ! On doit se déconecter à chaque fois
     private Connection conn;
 
     /** Constructeur */
@@ -50,12 +50,10 @@ public class Database {
 
     /** Traite une requete SELECT */
     public ResultSet selectRequest(String selectSQL){
-        connect();
         ResultSet res = null;
         try {
             PreparedStatement pstmt = conn.prepareStatement(selectSQL);
             res = pstmt.executeQuery();
-            conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -65,13 +63,35 @@ public class Database {
 
     public ResultSet selectUpdate(String selectSQL) {
         ResultSet res = null;
-        connect();
         try {
             PreparedStatement stmt = conn.prepareStatement(selectSQL,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_UPDATABLE);
             res = stmt.executeQuery();
-            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+
+    public int UpdateQuery(String nomTable, String attr, Object o, ArrayList<String> attrs, ArrayList<Object> values) {
+        int res = 0;
+
+        String sql = "UPDATE " + nomTable + " SET " + attr + " = ? WHERE ";
+        for(int i = 0; i < attrs.size(); i++)
+            sql += attrs.get(i) + " = ? AND ";
+        sql = sql.substring(0, sql.length() - 5);
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setObject(1, o);
+            for(int i = 0; i < attrs.size(); i++) {
+                stmt.setObject(i + 2, values.get(i));
+            }
+            System.out.println(stmt);
+            res = stmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -80,13 +100,11 @@ public class Database {
     }
 
     public int updateRequest(String updateSQL) {
-        connect();
         int res = 0;
 
         try {
             PreparedStatement pstmt = conn.prepareStatement(updateSQL);
             res = pstmt.executeUpdate();
-            conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -115,9 +133,11 @@ public class Database {
         PreparedStatement pstmt;
         try {
             pstmt = conn.prepareStatement(req);
-            pstmt.executeQuery();
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
 }

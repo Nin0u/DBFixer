@@ -75,6 +75,10 @@ public class EGD extends Contrainte {
                             val = val.substring(1, val.length() - 1);
                         }
                         for(int li : indexLeft) {
+                            String type = rsmd.getColumnTypeName(li + 1); 
+                            if(type.startsWith("null"))
+                                val = "(0," + val + ")";                         
+
                             if(!T.getString(li + 1).equals(val)) {
                                 System.out.println(T.getString(li + 1) + " " + val);
                                 updateDBCons(T, db, li, rsmd, attr, 1, orderAttribut, cut, ordRelations);
@@ -91,8 +95,8 @@ public class EGD extends Contrainte {
                         }
                         for(int li : indexLeft) {
                             for(int ri : indexRight) {
-                                if(!T.getString(li + 1).equals(T.getString(ri + 1))) {
-                                    updateDB(T, li, ri, db, rsmd, attr, orderAttribut, cut, ordRelations);
+                                if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+                                    updateDBBIS(T, li, ri, db, rsmd, attr, orderAttribut, cut, ordRelations);
                                     end = true;
                                     return 1;             
                                 }
@@ -110,40 +114,33 @@ public class EGD extends Contrainte {
         }
     }
 
-
-    private void updateDB(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, Attribut[] attr, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
+    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, Attribut[] attr, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
-                                
-        String update = "UPDATE " + ordRelations.get(ri).getNomTable() + " SET ";
-        if(!isWriteType(rsmd.getColumnType(li + 1)))
-            update += attr[1].getNom() + " = " + T.getString(li + 1) + " ";
-        else update += attr[1].getNom() + " = '" + T.getString(li + 1) + "' ";
-        update += "WHERE ";
-
+        
         int min = getMin(cut, ri);
         int max = getMax(cut, ri);
         System.out.println(min);
         System.out.println(max);
-        
+
+        ArrayList<String> attrs = new ArrayList<>();
+        ArrayList<Object> values = new ArrayList<>();
+
         for(int j = min; j < max; j++) {
-            int t = rsmd.getColumnType(j + 1);
-            if(!isWriteType(t))
-                update += orderAttribut.get(j).getNom() + "=" + T.getString(j + 1) + " AND ";
-            else 
-                update += orderAttribut.get(j).getNom() + "='" + T.getString(j + 1) + "' AND ";
+            attrs.add(orderAttribut.get(j).getNom());
+            values.add(T.getObject(j + 1));
         }
 
-        update = update.substring(0, update.length() - 5);
-        System.out.println(update);
-        
-        db.updateRequest(update);
-        //T.updateObject(ri+1, T.getObject(li + 1), rsmd.getColumnType(ri + 1));
-        // return 1;  
+        db.UpdateQuery(ordRelations.get(ri).getNomTable(), attr[1].getNom(),  T.getObject(li + 1), attrs, values);
     }
 
     private void updateDBCons(ResultSet T, Database db, int li, ResultSetMetaData rsmd, Attribut[] attr, int index, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         String update = "UPDATE " + ordRelations.get(li).getNomTable() + " SET ";
-        update += attr[0].getNom() + " = " + attr[index].getValeur() + " ";
+        update += attr[0].getNom() + " = " ;
+        
+        String type = rsmd.getColumnTypeName(li + 1); 
+        if(!type.startsWith("null"))
+            update += attr[index].getValeur() + " ";
+        else  update += attr[index].getValeur() + "::" + type + "  ";
         update += "WHERE ";
 
         int min = getMin(cut, li);

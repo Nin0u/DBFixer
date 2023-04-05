@@ -218,7 +218,7 @@ public abstract class Contrainte {
         }
     }
 
-    private String getType(Database db, String table, String attr) throws SQLException {
+    protected String getType(Database db, String table, String attr) throws SQLException {
         ResultSetMetaData r = db.getMetaData(table);
         int index = 1;
         while(index <= r.getColumnCount()) {
