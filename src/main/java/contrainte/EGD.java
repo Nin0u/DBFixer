@@ -120,7 +120,7 @@ public class EGD extends Contrainte {
                     for(int li : indexLeft) {
                         for(int ri : indexRight) {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
-                                if(!rsmd.getColumnTypeName(li + 1).startsWith("null"))
+                                if(!T.getString(li + 1).startsWith("(,"))
                                     updateDBBIS(T, li, ri, db, rsmd, orderAttribut, cut, ordRelations);
                                 else
                                     updateDBBIS(T, ri, li, db, rsmd, orderAttribut, cut, ordRelations);
