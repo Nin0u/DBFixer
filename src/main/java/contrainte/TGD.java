@@ -63,11 +63,37 @@ public class TGD extends Contrainte {
                 mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             }
 
+            int i = 0;
             for(Attribut att : rel.getMembres()) {
+                String type = mapTableData.get(rel.getNomTable()).getColumnTypeName(i + 1);
                 ArrayList<String> l = mapAttrTable.get(att);
-                if(l == null) l = new ArrayList<>();
-                l.add(rel.getNomTable());
-                mapAttrTable.put(att, l);
+                String typeTable = "";
+                if(l != null) {
+                    int change = 0;
+                    for(String table : l) {
+                        int index = 1;
+                        while(index <= mapTableData.get(table).getColumnCount()) {
+                            if(mapTableData.get(table).getColumnLabel(index).equals(att.getNom())) break;
+                            index++;
+                        }
+                        typeTable = mapTableData.get(table).getColumnTypeName(index);
+                        if(typeTable.startsWith("null") && !type.startsWith("null")) {
+                            change = 1;
+                            break;
+                        }
+                        if(!typeTable.startsWith("null") && type.startsWith("null")) {
+                            change = 2;
+                            break;
+                        }   
+                    }
+                    if(change == 2) {
+                        changeType(db, att.getNom(), l, mapTableData, type);
+                    } else if(change == 1) {
+                        db.ChangeType(rel.getNomTable(), typeTable, mapTableData.get(rel.getNomTable()).getColumnLabel(i + 1));
+                    }
+
+                }
+                i++;
             }
         }
 
@@ -148,9 +174,10 @@ public class TGD extends Contrainte {
                         j++;
                     }
 
+                    ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
                     // Vérifier si on a un tuple
                     // Si on en a un c'est ok on continue
-                    ResultSet res  = VerifReq(db, r2, T, rsmd, orderAttribut, attrLies, attrLibres);
+                    ResultSet res  = VerifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
                     
 
                     // On doit ajouter un tuple si il n'y a rien
@@ -158,14 +185,14 @@ public class TGD extends Contrainte {
                         System.out.println("Ajout de tuple");
                         ret = 1;
                         // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
-                        // Si ce n'est pas le cas on doit alterer la table
-                        ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());                        
+                        // Si ce n'est pas le cas on doit alterer la table                        
 
                         for(Integer index : attrLibres){
                             String columnTypeName = metaData.getColumnTypeName(index + 1);
+                            String nom_attr = metaData.getColumnLabel(index + 1);
                             System.out.println(columnTypeName);
                             if(!columnTypeName.startsWith("null_")){
-                                String alterReq = buildCreateTypeReq(r2.getMembres().get(index).getNom(), columnTypeName, r2.getNomTable());
+                                String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
                                 db.updateRequest(alterReq);
                                 System.out.println("Create Type null_" + columnTypeName);
                             }
@@ -204,9 +231,17 @@ public class TGD extends Contrainte {
         ArrayList<String> attr = new ArrayList<>();
         ArrayList<Object> values = new ArrayList<>();
 
-        for(Integer index : attrLies) {
-            attr.add(orderAttribut.get(index).getNom());
-            values.add(T.getObject(index + 1));
+        int i = 0;
+        int jlies = 0;
+        for(Attribut a : r2.getMembres()) {
+            // SI a est lie 
+            //   la i eme colonne de r2 doit etre egale à 
+            if(!indexInList(i, attrLibres)) {
+                attr.add(rsmd.getColumnLabel(i + 1));
+                values.add(T.getObject(attrLies.get(jlies) + 1));
+                jlies++;
+            }
+            i++;
         }
 
         return db.SelectQuery(r2.getNomTable(), attr, values);
@@ -248,15 +283,7 @@ public class TGD extends Contrainte {
      * @throws SQLException
      */
     private String buildInsertReq(Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
-        String req = "INSERT INTO " + r.getNomTable() + " (";
-        
-        
-        for(Attribut a : r.getMembres()) {
-            req += a.getNom() + ", ";
-        }
-        req = req.substring(0, req.length() - 2);
-        req += ")";
-        req += " VALUES (";
+        String req = "INSERT INTO " + r.getNomTable() + " VALUES (";
 
         int jlies = 0;
         for(int i = 0; i < r.getMembres().size(); i++) {

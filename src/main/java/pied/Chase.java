@@ -44,6 +44,7 @@ public class Chase {
                     if(ret == -1) return;
                     if(ret == 1) end = false;
                 }
+                System.out.println();
             }
 
         }

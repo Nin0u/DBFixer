@@ -1,4 +1,4 @@
 3
 R(a, b) -> Q(a, b, c)
-Q(a, b, c_1) -> P(b, c_2)
-P(b_2, c) ^ R(a, b_1) ^ (b_1 # b_2) -> (c # a)
+Q(e, f, g) -> P(f, k)
+P(c, d) ^ R(a, b) ^ (b # c) -> (d # a)

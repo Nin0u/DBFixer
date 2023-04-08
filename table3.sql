@@ -8,14 +8,14 @@ CREATE TABLE R (
 );
 
 CREATE TABLE P (
-    b INTEGER,
-    c INTEGER
+    c INTEGER,
+    d INTEGER
 );
 
 CREATE TABLE Q (
-    a INTEGER,
-    b INTEGER,
-    c INTEGER
+    e INTEGER,
+    f INTEGER,
+    g INTEGER
 );
 
 INSERT INTO R VALUES
