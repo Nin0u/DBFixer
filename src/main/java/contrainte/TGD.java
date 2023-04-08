@@ -40,21 +40,23 @@ public class TGD extends Contrainte {
     }
 
     public void repairType(Database db) throws SQLException {
-        super.repairType(db);
-
+        //super.repairType(db);
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
-        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+        HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
 
         // On constuit nos structures
         for(Relation rel : rlCorps) {
             if(mapTableData.get(rel.getNomTable()) == null) {
                 mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             }
+            int i = 0;
             for(Attribut att : rel.getMembres()) {
-                ArrayList<String> l = mapAttrTable.get(att);
+                ArrayList<Pair> l = mapAttrTable.get(att);
                 if(l == null) l = new ArrayList<>();
-                l.add(rel.getNomTable());
+                Pair m = new Pair(rel, i + 1);
+                l.add(m);
                 mapAttrTable.put(att, l);
+                i++;
             }
         }
 
@@ -62,63 +64,30 @@ public class TGD extends Contrainte {
             if(mapTableData.get(rel.getNomTable()) == null) {
                 mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             }
-
             int i = 0;
             for(Attribut att : rel.getMembres()) {
-                String type = mapTableData.get(rel.getNomTable()).getColumnTypeName(i + 1);
-                ArrayList<String> l = mapAttrTable.get(att);
-                String typeTable = "";
-                if(l != null) {
-                    int change = 0;
-                    for(String table : l) {
-                        int index = 1;
-                        while(index <= mapTableData.get(table).getColumnCount()) {
-                            if(mapTableData.get(table).getColumnLabel(index).equals(att.getNom())) break;
-                            index++;
-                        }
-                        typeTable = mapTableData.get(table).getColumnTypeName(index);
-                        if(typeTable.startsWith("null") && !type.startsWith("null")) {
-                            change = 1;
-                            break;
-                        }
-                        if(!typeTable.startsWith("null") && type.startsWith("null")) {
-                            change = 2;
-                            break;
-                        }   
-                    }
-                    if(change == 2) {
-                        changeType(db, att.getNom(), l, mapTableData, type);
-                    } else if(change == 1) {
-                        db.ChangeType(rel.getNomTable(), typeTable, mapTableData.get(rel.getNomTable()).getColumnLabel(i + 1));
-                    }
-
-                }
+                ArrayList<Pair> l = mapAttrTable.get(att);
+                if(l == null) l = new ArrayList<>();
+                Pair m = new Pair(rel, i + 1);
+                l.add(m);
+                mapAttrTable.put(att, l);
                 i++;
             }
         }
 
-        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
-            String nomAttr = entry.getKey().getNom();
+        for(HashMap.Entry<Attribut, ArrayList<Pair>> entry : mapAttrTable.entrySet()) {
             boolean change = false;
             String nomType = "";
-            for(String table : entry.getValue()) {
-                int index = 1;
-                while(index <= mapTableData.get(table).getColumnCount()) {
-                    if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
-                    index++;
-                }
-                if(index > mapTableData.get(table).getColumnCount()) {
-                    System.out.println("Error Repair !");
-                    System.exit(1);
-                }
-                if(mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
+            for(Pair pair : entry.getValue()) {
+                String table = pair.a.getNomTable();
+                nomType = mapTableData.get(table).getColumnTypeName(pair.b);
+                if(nomType.startsWith("null")) {
                     change = true;
-                    nomType = mapTableData.get(table).getColumnTypeName(index);
                     break;
                 }
             } 
             if(change) {
-                changeType(db, nomAttr, entry.getValue(), mapTableData, nomType);
+                changeType(db, entry.getValue(), mapTableData, nomType);
             }
         }
     }

@@ -33,18 +33,21 @@ public class EGD extends Contrainte {
     public void repairType(Database db) throws SQLException {
         super.repairType(db);
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
-        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+        HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
 
         // On constuit nos structures
         for(Relation rel : rlCorps) {
             if(mapTableData.get(rel.getNomTable()) == null) {
                 mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             }
+            int i = 0;
             for(Attribut att : rel.getMembres()) {
-                ArrayList<String> l = mapAttrTable.get(att);
+                ArrayList<Pair> l = mapAttrTable.get(att);
                 if(l == null) l = new ArrayList<>();
-                l.add(rel.getNomTable());
+                Pair m = new Pair(rel, i + 1);
+                l.add(m);
                 mapAttrTable.put(att, l);
+                i++;
             }
         }
 
@@ -52,27 +55,18 @@ public class EGD extends Contrainte {
         if (egTete != null) {
             for(Egalite eg : egTete) {
                 Attribut[] attr = eg.getMembres();
-                String table1 = mapAttrTable.get(attr[0]).get(0);
-                String table2 = mapAttrTable.get(attr[1]).get(0);
-                System.out.println(table1 + " " + table2);
-                int index1 = 1;
-                while(index1 <= mapTableData.get(table1).getColumnCount()) {
-                    if(mapTableData.get(table1).getColumnLabel(index1).equals(attr[0].getNom())) break;
-                    index1++;
+                Pair p1 = mapAttrTable.get(attr[0]).get(0);
+                Pair p2 = mapAttrTable.get(attr[1]).get(0);
+                
+                String table1 = p1.a.getNomTable();
+                String table2 = p2.a.getNomTable();
+
+                if(mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null")) {
+                    changeType(db, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(p1.b));
                 }
 
-                int index2 = 1;
-                while(index2 <= mapTableData.get(table2).getColumnCount()) {
-                    if(mapTableData.get(table2).getColumnLabel(index2).equals(attr[1].getNom())) break;
-                    index2++;
-                }
-
-                if(mapTableData.get(table1).getColumnTypeName(index1).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(index2).startsWith("null")) {
-                    changeType(db, attr[1].getNom(), mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
-                }
-
-                if(mapTableData.get(table2).getColumnTypeName(index2).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(index1).startsWith("null")) {
-                    changeType(db, attr[0].getNom(), mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
+                if(mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null")) {
+                    changeType(db, mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(p2.b));
                 }
             }
         }
@@ -117,42 +111,21 @@ public class EGD extends Contrainte {
                 for(Egalite eg : egTete) {
                     Attribut [] attr = eg.getMembres();
                     ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
+                    ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
 
-                    //Cas constante
-                    if(attr[1].getValeur() != null) {
-                        String val = attr[1].getValeur();
-                        if(attr[1].getValeur().charAt(0) == '\'') {
-                            val = val.substring(1, val.length() - 1);
-                        }
-                        for(int li : indexLeft) {
-                            String type = rsmd.getColumnTypeName(li + 1); 
-                            if(type.startsWith("null"))
-                                val = "(0," + val + ")";                         
-
-                            if(!T.getString(li + 1).equals(val)) {
-                                System.out.println(T.getString(li + 1) + " " + val);
-                                updateDBCons(T, db, li, rsmd, attr, 1, orderAttribut, cut, ordRelations);
+                    if(indexLeft.size() == 0 || indexRight.size() == 0) {
+                        System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
+                        return -1;
+                    }
+                    for(int li : indexLeft) {
+                        for(int ri : indexRight) {
+                            if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+                                if(!rsmd.getColumnTypeName(li + 1).startsWith("null"))
+                                    updateDBBIS(T, li, ri, db, rsmd, orderAttribut, cut, ordRelations);
+                                else
+                                    updateDBBIS(T, ri, li, db, rsmd, orderAttribut, cut, ordRelations);
                                 end = true;
-                                return 1;
-                            }
-                        }
-                    } else {
-                        // Cas non constante
-                        ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
-                        if(indexLeft.size() == 0 || indexRight.size() == 0) {
-                            System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
-                            return -1;
-                        }
-                        for(int li : indexLeft) {
-                            for(int ri : indexRight) {
-                                if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
-                                    if(!rsmd.getColumnTypeName(li + 1).startsWith("null"))
-                                        updateDBBIS(T, li, ri, db, rsmd, attr[1].getNom(), orderAttribut, cut, ordRelations);
-                                    else
-                                        updateDBBIS(T, ri, li, db, rsmd, attr[0].getNom(), orderAttribut, cut, ordRelations);
-                                    end = true;
-                                    return 1;             
-                                }
+                                return 1;             
                             }
                         }
                     }
@@ -167,7 +140,7 @@ public class EGD extends Contrainte {
         }
     }
 
-    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, String attr, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
+    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
         
         int min = getMin(cut, ri);
@@ -179,40 +152,11 @@ public class EGD extends Contrainte {
         ArrayList<Object> values = new ArrayList<>();
 
         for(int j = min; j < max; j++) {
-            attrs.add(orderAttribut.get(j).getNom());
+            attrs.add(rsmd.getColumnLabel(j + 1));
             values.add(T.getObject(j + 1));
         }
 
-        db.UpdateQuery(ordRelations.get(ri).getNomTable(), attr,  T.getObject(li + 1), attrs, values);
-    }
-
-    private void updateDBCons(ResultSet T, Database db, int li, ResultSetMetaData rsmd, Attribut[] attr, int index, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
-        String update = "UPDATE " + ordRelations.get(li).getNomTable() + " SET ";
-        update += attr[0].getNom() + " = " ;
-        
-        String type = rsmd.getColumnTypeName(li + 1); 
-        if(!type.startsWith("null"))
-            update += attr[index].getValeur() + " ";
-        else  update += attr[index].getValeur() + "::" + type + "  ";
-        update += "WHERE ";
-
-        int min = getMin(cut, li);
-        int max = getMax(cut, li);
-        System.out.println(min);
-        System.out.println(max);
-        
-        for(int j = min; j < max; j++) {
-            int t = rsmd.getColumnType(j + 1);
-            if(!isWriteType(t))
-                update += orderAttribut.get(j).getNom() + "=" + T.getString(j + 1) + " AND ";
-            else 
-                update += orderAttribut.get(j).getNom() + "='" + T.getString(j + 1) + "' AND ";
-        }
-
-        update = update.substring(0, update.length() - 5);
-        System.out.println(update);
-        
-        db.updateRequest(update);   
+        db.UpdateQuery(ordRelations.get(ri).getNomTable(), rsmd.getColumnLabel(ri + 1),  T.getObject(li + 1), attrs, values);
     }
 
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {

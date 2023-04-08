@@ -72,7 +72,8 @@ public class Main{
         db.connect();
         Chase.standardChase(db, contraintes);
         // for(Contrainte c : contraintes) {
-        //     c.repairType(db);
+        //     c.affiche();
+        //     c.executeCorps(db);
         //     c.action(c.executeCorps(db), db);
         // }
         db.close();

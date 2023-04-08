@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+
+import javax.lang.model.type.TypeVariable;
 
 import atome.*;
 import pied.Database;
@@ -40,7 +43,7 @@ public abstract class Contrainte {
     }
 
     public String executeCorps(Database db) throws SQLException {
-        String select = "SELECT ";
+        String select = "SELECT * ";
         String from = "FROM ";
         String where = "WHERE ";
 
@@ -52,31 +55,21 @@ public abstract class Contrainte {
             i++;
         }   
 
-        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
-        HashMap<Attribut, ArrayList<String>> mapAttrTable2 = new HashMap<>();
+        HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
+        HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
 
         for(Relation rel : rlCorps) {
+            if(mapTableData.get(rel.getNomTable()) == null) 
+                mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             from += rel.getNomTable() + " " + map.get(rel) + ", ";
+            int num = 0;
             for(Attribut a : rel.getMembres()) {
-                select += map.get(rel) + "." + a.getNom() + ", ";
-                if(a.getValeur() != null) {
-                    String type = getType(db, rel.getNomTable(), a.getNom());
-                    where += map.get(rel) + "." + a.getNom() + "=" + a.getValeur();
-                    if(type != null && type.startsWith("null")) {
-                        where += "::" + type;
-                    } 
-                     
-                    where += " AND ";
-                }
-                ArrayList<String> l = mapAttrTable.get(a);
+                ArrayList<Pair> l = mapAttrTable.get(a);
                 if(l == null) l = new ArrayList<>();
-                l.add(map.get(rel));
+                Pair m = new Pair(rel, num + 1);
+                l.add(m);
                 mapAttrTable.put(a, l);
-
-                l = mapAttrTable2.get(a);
-                if(l == null) l = new ArrayList<>();
-                l.add(rel.getNomTable());
-                mapAttrTable2.put(a, l);
+                num++;
             }
         }
 
@@ -85,48 +78,32 @@ public abstract class Contrainte {
             return null;
         }
         from = from.substring(0, from.length() - 2);
-        select = select.substring(0, select.length() - 2);
         
         if (egCorps != null) {
             for(Egalite eg : egCorps) {
-                Attribut[] attr = eg.getMembres();
-                String left = attr[0].getNom();
-                ArrayList<String> tLeft = mapAttrTable.get(attr[0]);
-                if(tLeft == null) {
-                    System.out.println("pbm left");
-                    return null;
-                }
-                left = tLeft.get(0) + "." + left;
-
+                Attribut [] att = eg.getMembres();
+                Pair ml = mapAttrTable.get(att[0]).get(0);
+                String left = "";
+                left += map.get(ml.a) + ".";
+                left += mapTableData.get(ml.a.getNomTable()).getColumnLabel(ml.b);
+                
+                Pair mr = mapAttrTable.get(att[1]).get(0);
                 String right = "";
-                if(attr[1].getValeur() != null) {
-                    right = attr[1].getValeur();
-                    String table = mapAttrTable2.get(attr[1].getNom()).get(0);
-                    String type = getType(db, table, attr[1].getNom());
-                    if(type != null && type.startsWith("null")) 
-                        right += "::" + type;
+                right += map.get(mr.a) + ".";
+                right += mapTableData.get(mr.a.getNomTable()).getColumnLabel(mr.b);
 
-                } else {
-                    right = attr[1].getNom();
-                    ArrayList<String> tRight = mapAttrTable.get(attr[1]);
-                    if(tRight == null) {
-                        System.out.println("pbm right");
-                        return null;
-                    }
-                    right = tRight.get(0) + "." + right;
-                }
-                where += left + "=" + right + " AND ";
+                where += left + " = " + right + " AND ";
             }
         }
 
-        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
+        for(HashMap.Entry<Attribut, ArrayList<Pair>> entry : mapAttrTable.entrySet()) {
             String prev = "";
-            String nom = entry.getKey().getNom();
-            for(String elt : entry.getValue()) {
+            for(Pair elt : entry.getValue()) {
+                String current = map.get(elt.a) + "." + mapTableData.get(elt.a.getNomTable()).getColumnLabel(elt.b);
                 if(prev.length() != 0) {
-                    where += prev + "=" + elt + "." + nom + " AND ";
+                    where += prev + " = " + current + " AND ";
                 }
-                prev = elt + "." + nom;
+                prev = current;
             }
         }
 
@@ -144,99 +121,70 @@ public abstract class Contrainte {
     // But est de mettre les types NULL_* dans les bonnes colonnes pour eviter de planter les requetes plus tard
     public void repairType(Database db) throws SQLException {
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
-        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+        HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
 
         // On constuit nos structures
         for(Relation rel : rlCorps) {
             if(mapTableData.get(rel.getNomTable()) == null) {
                 mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
             }
+            int i = 0;
             for(Attribut att : rel.getMembres()) {
-                ArrayList<String> l = mapAttrTable.get(att);
+                ArrayList<Pair> l = mapAttrTable.get(att);
                 if(l == null) l = new ArrayList<>();
-                l.add(rel.getNomTable());
+                Pair m = new Pair(rel, i + 1);
+                l.add(m);
                 mapAttrTable.put(att, l);
+                i++;
             }
         }
 
-        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
-            String nomAttr = entry.getKey().getNom();
+        for(HashMap.Entry<Attribut, ArrayList<Pair>> entry : mapAttrTable.entrySet()) {
             boolean change = false;
             String nomType = "";
-            for(String table : entry.getValue()) {
-                int index = 1;
-                while(index <= mapTableData.get(table).getColumnCount()) {
-                    if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
-                    index++;
-                }
-                if(index > mapTableData.get(table).getColumnCount()) {
-                    System.out.println("Error Repair !");
-                    System.exit(1);
-                }
-                if(mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
+            for(Pair pair : entry.getValue()) {
+                String table = pair.a.getNomTable();
+                nomType = mapTableData.get(table).getColumnTypeName(pair.b);
+                if(nomType.startsWith("null")) {
                     change = true;
-                    nomType = mapTableData.get(table).getColumnTypeName(index);
                     break;
                 }
             } 
             if(change) {
-                changeType(db, nomAttr, entry.getValue(), mapTableData, nomType);
+                changeType(db, entry.getValue(), mapTableData, nomType);
             }
         }
 
         if (egCorps != null) {
             for(Egalite eg : egCorps) {
                 Attribut[] attr = eg.getMembres();
-                String table1 = mapAttrTable.get(attr[0]).get(0);
-                String table2 = mapAttrTable.get(attr[1]).get(0);
-                int index1 = 1;
-                while(index1 <= mapTableData.get(table1).getColumnCount()) {
-                    if(mapTableData.get(table1).getColumnLabel(index1).equals(attr[0].getNom())) break;
-                    index1++;
+                Pair p1 = mapAttrTable.get(attr[0]).get(0);
+                Pair p2 = mapAttrTable.get(attr[1]).get(0);
+                
+                String table1 = p1.a.getNomTable();
+                String table2 = p2.a.getNomTable();
+
+                if(mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null")) {
+                    changeType(db, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(p1.b));
                 }
 
-                int index2 = 1;
-                while(index2 <= mapTableData.get(table2).getColumnCount()) {
-                    if(mapTableData.get(table2).getColumnLabel(index2).equals(attr[1].getNom())) break;
-                    index2++;
-                }
-
-                if(mapTableData.get(table1).getColumnTypeName(index1).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(index2).startsWith("null")) {
-                    changeType(db, attr[1].getNom(), mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(index1));
-                }
-
-                if(mapTableData.get(table2).getColumnTypeName(index2).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(index1).startsWith("null")) {
-                    changeType(db, attr[0].getNom(), mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(index2));
+                if(mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null") && !mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null")) {
+                    changeType(db, mapAttrTable.get(attr[0]), mapTableData, mapTableData.get(table2).getColumnTypeName(p2.b));
                 }
             }
         }
     }
 
-    protected void changeType(Database db, String nomAttr, ArrayList<String> tables, HashMap<String, ResultSetMetaData> mapTableData, String nomType) throws SQLException {
-        for(String table : tables) {
-            int index = 1;
-            while(index <= mapTableData.get(table).getColumnCount()) {
-                if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
-                index++;
-            }
+    protected void changeType(Database db, ArrayList<Pair> pairs, HashMap<String, ResultSetMetaData> mapTableData, String nomType) throws SQLException {
+        for(Pair pair : pairs) {
+            String table = pair.a.getNomTable();
+            String type = mapTableData.get(table).getColumnTypeName(pair.b);
 
-            if(!mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
-                db.ChangeType(table, nomType, nomAttr);
+            if(!type.startsWith("null")) {
+                db.ChangeType(table, nomType, mapTableData.get(table).getColumnLabel(pair.b));
                 mapTableData.put(table, db.getMetaData(table));
             }
-            
         }
-    }
-
-    protected String getType(Database db, String table, String attr) throws SQLException {
-        ResultSetMetaData r = db.getMetaData(table);
-        int index = 1;
-        while(index <= r.getColumnCount()) {
-            if(r.getColumnLabel(index).equals(attr)) break;
-            index++;
-        }
-        if(index > r.getColumnCount()) return null;
-        return r.getColumnTypeName(index);
     }
 
     protected boolean isWriteType(int t) {
@@ -257,4 +205,13 @@ public abstract class Contrainte {
 
     /** Méthode d'affichage */
     public abstract void affiche();
+
+    public class Pair {
+        public Relation a;
+        public Integer b;
+        Pair(Relation a, Integer b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
 }
