@@ -146,7 +146,10 @@ public class EGD extends Contrainte {
                         for(int li : indexLeft) {
                             for(int ri : indexRight) {
                                 if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
-                                    updateDBBIS(T, li, ri, db, rsmd, attr, orderAttribut, cut, ordRelations);
+                                    if(!rsmd.getColumnTypeName(li + 1).startsWith("null"))
+                                        updateDBBIS(T, li, ri, db, rsmd, attr[1].getNom(), orderAttribut, cut, ordRelations);
+                                    else
+                                        updateDBBIS(T, ri, li, db, rsmd, attr[0].getNom(), orderAttribut, cut, ordRelations);
                                     end = true;
                                     return 1;             
                                 }
@@ -164,7 +167,7 @@ public class EGD extends Contrainte {
         }
     }
 
-    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, Attribut[] attr, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
+    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, String attr, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
         
         int min = getMin(cut, ri);
@@ -180,7 +183,7 @@ public class EGD extends Contrainte {
             values.add(T.getObject(j + 1));
         }
 
-        db.UpdateQuery(ordRelations.get(ri).getNomTable(), attr[1].getNom(),  T.getObject(li + 1), attrs, values);
+        db.UpdateQuery(ordRelations.get(ri).getNomTable(), attr,  T.getObject(li + 1), attrs, values);
     }
 
     private void updateDBCons(ResultSet T, Database db, int li, ResultSetMetaData rsmd, Attribut[] attr, int index, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
