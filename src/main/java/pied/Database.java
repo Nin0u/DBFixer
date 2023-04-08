@@ -164,5 +164,22 @@ public class Database {
         }
     }
 
+    public int InsertReq(String sql, ArrayList<Object> l) {
+        int res = 0;
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            for(int i = 0; i < l.size(); i++) {
+                pstmt.setObject(i + 1, l.get(i));
+            }
+            System.out.println(pstmt);
+            res = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return res;
+    }
+
 
 }

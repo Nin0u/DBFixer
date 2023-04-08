@@ -168,9 +168,7 @@ public class TGD extends Contrainte {
                         }
 
                         // On insère le tuple
-                        String insertReq = buildInsertReq(r2, T, attrLies, attrLibres);
-                        System.out.println(insertReq);
-                        db.updateRequest(insertReq);
+                        InsertReq(db, r2, T, attrLies, attrLibres);
                     }
 
                 }
@@ -251,22 +249,25 @@ public class TGD extends Contrainte {
      * @return La requête d'insertion
      * @throws SQLException
      */
-    private String buildInsertReq(Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+    private void InsertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
         String req = "INSERT INTO " + r.getNomTable() + " VALUES (";
 
         int jlies = 0;
+
+        ArrayList<Object> l = new ArrayList<>();
         for(int i = 0; i < r.getMembres().size(); i++) {
             if(indexInList(i, attrLibres)) {
                 num_null++;
                 req += "(" + String.valueOf(num_null) + ", NULL), ";
             } else {
-                req += T.getObject(attrLies.get(jlies) + 1) + ", ";
+                req += "?, "; //T.getObject(attrLies.get(jlies) + 1) + ", ";
+                l.add(T.getObject(attrLies.get(jlies) + 1));
                 jlies++;
             }
         }
 
         req = req.substring(0, req.length() - 2) + ")";
-        return req;
+        db.InsertReq(req, l);
     }
 
     private boolean indexInList(int i, ArrayList<Integer> L){
