@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import atome.*;
 import variable.*;
@@ -24,7 +25,7 @@ public class TGD extends Contrainte {
      * Chemin vers le script qui permet de créer un nouveau type.
      * Le fichier va être formatté afin de correspondre aux attributs sont il faut créer un type NULL.
      */
-    private static final Path typeSQLSCriptPath = Paths.get("src/resources/type.sql");
+    private static final Path typeSQLSCriptPath = Paths.get("src/main/resources/type.sql");
     
     /** Numéro de null. */
     private static int num_null = 0;
@@ -38,6 +39,64 @@ public class TGD extends Contrainte {
         this.rlTete = rlTete;
     }
 
+    public void repairType(Database db) throws SQLException {
+        super.repairType(db);
+
+        HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
+        HashMap<Attribut, ArrayList<String>> mapAttrTable = new HashMap<>();
+
+        // On constuit nos structures
+        for(Relation rel : rlCorps) {
+            if(mapTableData.get(rel.getNomTable()) == null) {
+                mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
+            }
+            for(Attribut att : rel.getMembres()) {
+                ArrayList<String> l = mapAttrTable.get(att);
+                if(l == null) l = new ArrayList<>();
+                l.add(rel.getNomTable());
+                mapAttrTable.put(att, l);
+            }
+        }
+
+        for(Relation rel : rlTete) {
+            if(mapTableData.get(rel.getNomTable()) == null) {
+                mapTableData.put(rel.getNomTable(), db.getMetaData(rel.getNomTable()));
+            }
+
+            for(Attribut att : rel.getMembres()) {
+                ArrayList<String> l = mapAttrTable.get(att);
+                if(l == null) l = new ArrayList<>();
+                l.add(rel.getNomTable());
+                mapAttrTable.put(att, l);
+            }
+        }
+
+        for(HashMap.Entry<Attribut, ArrayList<String>> entry : mapAttrTable.entrySet()) {
+            String nomAttr = entry.getKey().getNom();
+            boolean change = false;
+            String nomType = "";
+            for(String table : entry.getValue()) {
+                int index = 1;
+                while(index <= mapTableData.get(table).getColumnCount()) {
+                    if(mapTableData.get(table).getColumnLabel(index).equals(nomAttr)) break;
+                    index++;
+                }
+                if(index > mapTableData.get(table).getColumnCount()) {
+                    System.out.println("Error Repair !");
+                    System.exit(1);
+                }
+                if(mapTableData.get(table).getColumnTypeName(index).startsWith("null")) {
+                    change = true;
+                    nomType = mapTableData.get(table).getColumnTypeName(index);
+                    break;
+                }
+            } 
+            if(change) {
+                changeType(db, nomAttr, entry.getValue(), mapTableData, nomType);
+            }
+        }
+    }
+
     /**
      * Ajoute un nouveau tuple u tq db union u satisfait e
      *
@@ -46,9 +105,13 @@ public class TGD extends Contrainte {
      */
     public int action(String req, Database db){
         try {
+            int ret = 0;
+
             // On récupère les tuples qui respectent le corps
             ResultSet T = db.selectRequest(req);
             ResultSetMetaData rsmd = T.getMetaData();
+
+
 
             // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
             ArrayList<Attribut> orderAttribut = new ArrayList<>();
@@ -59,52 +122,65 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
+                for(int i = 0; i < orderAttribut.size(); i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){
                     // On construit les variables libres et liées 
                     ArrayList<Integer> attrLies = new ArrayList<Integer>();
                     ArrayList<Integer> attrLibres = new ArrayList<Integer>();
-                    for(int i = 0; i < orderAttribut.size(); i++){
-                        boolean eq = false;
-                        for (Attribut a2 : r2.getMembres()){
-                            if (orderAttribut.get(i).equals(a2)){
+
+                    int j = 0;
+                    for(Attribut a2 : r2.getMembres()) {
+                        boolean find = false;
+                        for(int i = 0; i < orderAttribut.size(); i++) {
+                            if(a2.equals(orderAttribut.get(i))) {
                                 attrLies.add(i);
-                                eq = true;
+                                find = true;
+                                break;
                             }
-                               
                         }
-                        if (!eq) attrLibres.add(i);
+                        if(!find) attrLibres.add(j); 
+                        j++;
                     }
 
                     // Vérifier si on a un tuple
                     // Si on en a un c'est ok on continue
-                    String verifReq = buildVerifReq(r2, T, rsmd, orderAttribut, attrLies, attrLibres);
-                    System.out.println(verifReq);
-                    ResultSet res = db.selectRequest(verifReq);
+                    ResultSet res  = VerifReq(db, r2, T, rsmd, orderAttribut, attrLies, attrLibres);
+                    
 
                     // On doit ajouter un tuple si il n'y a rien
                     if (!res.next()) {
                         System.out.println("Ajout de tuple");
+                        ret = 1;
                         // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
                         // Si ce n'est pas le cas on doit alterer la table
+                        ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());                        
+
                         for(Integer index : attrLibres){
-                            String columnTypeName = rsmd.getColumnTypeName(index);
-                            if(!columnTypeName.startsWith("NULL_")){
-                                String alterReq = buildCreateTypeReq(rsmd.getColumnName(index), columnTypeName, r2.getNomTable());
-                                db.selectRequest(alterReq);
-                                System.out.println("Create Type NULL_" + columnTypeName);
+                            String columnTypeName = metaData.getColumnTypeName(index + 1);
+                            System.out.println(columnTypeName);
+                            if(!columnTypeName.startsWith("null_")){
+                                String alterReq = buildCreateTypeReq(r2.getMembres().get(index).getNom(), columnTypeName, r2.getNomTable());
+                                db.updateRequest(alterReq);
+                                System.out.println("Create Type null_" + columnTypeName);
                             }
                         }
 
                         // On insère le tuple
-                        String insertReq = buildInsertReq(r2, T, rsmd, orderAttribut, attrLies);
-                        db.selectRequest(insertReq);
+                        String insertReq = buildInsertReq(r2, T, attrLies, attrLibres);
+                        System.out.println(insertReq);
+                        db.updateRequest(insertReq);
                     }
 
                 }
             }
 
-            return 0;
+            return ret;
         } catch (SQLException e){
             e.printStackTrace();
             return -1;
@@ -124,32 +200,16 @@ public class TGD extends Contrainte {
      * @return La requête de vérification
      * @throws SQLException
      */
-    private String buildVerifReq(Relation r2, ResultSet T, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
-        String req = "SELECT * FROM " + r2.getNomTable();
-        
-        String where = " WHERE ";
-        boolean atLeastOneCondition = false;
+    private ResultSet VerifReq(Database db, Relation r2, ResultSet T, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+        ArrayList<String> attr = new ArrayList<>();
+        ArrayList<Object> values = new ArrayList<>();
+
         for(Integer index : attrLies) {
-            if (atLeastOneCondition) where += " AND ";
-            else atLeastOneCondition = true;
-
-            Object value = T.getObject(orderAttribut.get(index).getNom());
-            if (isWriteType(rsmd.getColumnType( T.findColumn(orderAttribut.get(index).getNom()))))
-                value = "'" + value + "'";
-            where += orderAttribut.get(index).getNom() + "=" + value;
+            attr.add(orderAttribut.get(index).getNom());
+            values.add(T.getObject(index + 1));
         }
 
-        for (Integer index : attrLibres){
-            if (atLeastOneCondition) where += " AND ";
-            else atLeastOneCondition = true;
-
-            String value = orderAttribut.get(index).getValeur();
-            if(value != null){
-                where += orderAttribut.get(index).getNom() + "=" + value;
-            }
-        }
-
-        return req + where;
+        return db.SelectQuery(r2.getNomTable(), attr, values);
     }
 
     /**
@@ -167,8 +227,7 @@ public class TGD extends Contrainte {
             String content = new String(Files.readAllBytes(typeSQLSCriptPath), StandardCharsets.UTF_8);
             content = content.replaceAll("\n", "")
                              .replaceAll("%nomvar", nomvar).replaceAll("%typevar", typevar)
-                             .replaceAll("nomTable", nomTable).replaceAll("num_null",String.valueOf(num_null));
-            num_null++;
+                             .replaceAll("%nomTable", nomTable);
             return content;
         } catch (IOException e){
             e.printStackTrace();
@@ -188,17 +247,29 @@ public class TGD extends Contrainte {
      * @return La requête d'insertion
      * @throws SQLException
      */
-    private String buildInsertReq(Relation r, ResultSet T,  ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies) throws SQLException{
-        String req = "INSERT INTO " + r.getNomTable() + " VALUES (";
+    private String buildInsertReq(Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+        String req = "INSERT INTO " + r.getNomTable() + " (";
         
-        for(int i = 0; i < orderAttribut.size(); i++){
-            if (indexInList(i, attrLies))
-                req += T.getObject(i) + ",";
-            else 
-                req += rsmd.getColumnTypeName(i) + "(" + T.getObject(i) + "," + String.valueOf(num_null) + "),"; 
+        
+        for(Attribut a : r.getMembres()) {
+            req += a.getNom() + ", ";
+        }
+        req = req.substring(0, req.length() - 2);
+        req += ")";
+        req += " VALUES (";
+
+        int jlies = 0;
+        for(int i = 0; i < r.getMembres().size(); i++) {
+            if(indexInList(i, attrLibres)) {
+                num_null++;
+                req += "(" + String.valueOf(num_null) + ", NULL), ";
+            } else {
+                req += T.getObject(attrLies.get(jlies) + 1) + ", ";
+                jlies++;
+            }
         }
 
-        req = req.substring(req.length() -1) + ")";
+        req = req.substring(0, req.length() - 2) + ")";
         return req;
     }
 

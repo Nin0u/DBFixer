@@ -1,0 +1,3 @@
+2
+Rel(a, b) -> Ral(b, a)
+Table1(a, b) -> Table2(a, b, c)

@@ -99,6 +99,29 @@ public class Database {
         return res;
     }
 
+    public ResultSet SelectQuery(String nomtable, ArrayList<String> attrs, ArrayList<Object> values) {
+        ResultSet res = null;
+
+        String sql = "SELECT * FROM " + nomtable;
+        if(attrs.size() != 0) 
+            sql += " WHERE ";
+        for(int i = 0; i < attrs.size(); i++)
+            sql += attrs.get(i) + " = ? AND ";
+        sql = sql.substring(0, sql.length() - 5);
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            for(int i = 0; i < attrs.size(); i++) {
+                stmt.setObject(i + 1, values.get(i));
+            }
+            System.out.println(stmt);
+            res = stmt.executeQuery();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
     public int updateRequest(String updateSQL) {
         int res = 0;
 
@@ -115,7 +138,9 @@ public class Database {
     public ResultSetMetaData getMetaData(String nomTable) {
         ResultSetMetaData res = null;
         try {
+            //System.out.println(nomTable);
             String SQL = "select * from " + nomTable + " where 1<0";
+           // System.out.println(SQL);
             PreparedStatement pstmt = conn.prepareStatement(SQL);
             ResultSet r = pstmt.executeQuery();
             res = r.getMetaData();

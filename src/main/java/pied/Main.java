@@ -68,22 +68,10 @@ public class Main{
         ArrayList<Contrainte> contraintes = Parser.parse(is);
 
         if (contraintes == null) System.out.println("Contraintes null");
-        else {
-            for(Contrainte c : contraintes){
-                c.affiche();
-                System.out.println("DEBUT REPAIR");
-                db.connect();
-                c.repairType(db);
-                System.out.println("FIN REPAIR !");
-                String req = c.executeCorps(db);
-                int i = 0;
-                while(c.action(req, db) == 1 && i < 3) {
-                    i++;
-                }
-                db.close();
-                System.out.println("\n");
-            }    
-        }
+        
+        db.connect();
+        Chase.standardChase(db, contraintes);
+        db.close();
     }
 
     public static void printHelp(){
