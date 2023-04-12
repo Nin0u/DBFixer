@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import atome.*;
-import pied.Database;
+import maindb.Database;
 import variable.Attribut;
 
 /**

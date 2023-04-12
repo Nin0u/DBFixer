@@ -1,4 +1,4 @@
-package pied;
+package maindb;
 
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -63,7 +63,6 @@ public class Main{
             return;
         }
 
-        // "jdbc:postgresql://localhost/nico", "nico", "nico"
         Database db = new Database(login);
         ArrayList<Contrainte> contraintes = Parser.parse(is);
 
@@ -71,11 +70,6 @@ public class Main{
         
         db.connect();
         Chase.standardChase(db, contraintes);
-        // for(Contrainte c : contraintes) {
-        //     c.affiche();
-        //     c.executeCorps(db);
-        //     c.action(c.executeCorps(db), db);
-        // }
         db.close();
     }
 

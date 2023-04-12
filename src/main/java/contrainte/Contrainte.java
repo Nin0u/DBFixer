@@ -5,12 +5,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-
-import javax.lang.model.type.TypeVariable;
 
 import atome.*;
-import pied.Database;
+import maindb.Database;
 import variable.Attribut;
 
 public abstract class Contrainte {

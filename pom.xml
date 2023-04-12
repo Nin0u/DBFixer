@@ -22,13 +22,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
         </dependency>
-
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.9.2</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 	<build>
@@ -44,7 +37,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>3.1.0</version>
 				<configuration>
-					<mainClass>pied.Main</mainClass>
+					<mainClass>maindb.Main</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

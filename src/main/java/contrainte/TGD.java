@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 import atome.*;
 import variable.*;
-import pied.Database;
+import maindb.Database;
 
 /**
  * Tuple Generating Dependency :
@@ -104,9 +104,6 @@ public class TGD extends Contrainte {
 
             // On récupère les tuples qui respectent le corps
             ResultSet T = db.selectRequest(req);
-            ResultSetMetaData rsmd = T.getMetaData();
-
-
 
             // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
             ArrayList<Attribut> orderAttribut = new ArrayList<>();
@@ -289,4 +286,5 @@ public class TGD extends Contrainte {
 
         System.out.println("=========== FIN TGD ==============");
     }
+
 }

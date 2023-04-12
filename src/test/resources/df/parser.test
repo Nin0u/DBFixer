@@ -1,0 +1,7 @@
+6
+Rel(a_1, b) ^ Ral(a_2, b) -> (a_1 = a_2)
+Eleve(nss_1, nom_1, prenom_1, age_1) ^ Eleve(nss_2, nom_2, prenom_2, age_2) ^ (nss_1 = nss_2) -> (nom_1 = nom_2) ^ (prenom_1 = prenom_2) ^ (age_1 = age_2)
+Eleve(nss, nom, prenom, age) -> Eleve(nss, prenom, nom, age)
+R(x1, x2) -> Q(x1, x2, z1)
+Q(y1, x1, y2) -> P(x1, z1)
+P(y2, x2) ^ R(x1, y1) ^ (y1 = y2) -> (x2 = x1) 
