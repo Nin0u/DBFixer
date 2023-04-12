@@ -1,0 +1,33 @@
+DROP TABLE IF EXISTS Rel;
+DROP TABLE IF EXISTS Ral;
+DROP TABLE IF EXISTS Eleve;
+
+CREATE TABLE Rel (
+    a INTEGER,
+    b INTEGER
+);
+
+CREATE TABLE Ral (
+    a INTEGER,
+    b INTEGER
+);
+
+CREATE TABLE Eleve(
+    nss INTEGER,
+    nom VARCHAR(10),
+    prenom VARCHAR(10),
+    age INTEGER
+);
+
+INSERT INTO Rel VALUES
+(1, 2),
+(2, 3);
+
+INSERT INTO Ral VALUES
+(2, 2),
+(3, 3);
+
+INSERT INTO Eleve VALUES
+(1, 'ROUGEOLLE', 'Yoan', 21),
+(1, 'YOUGEOLLE', 'Roan', 21),
+(3, 'Test', 'BLABL', 41);
