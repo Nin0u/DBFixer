@@ -195,9 +195,8 @@ public class TGD extends Contrainte {
         ArrayList<String> attr = new ArrayList<>();
         ArrayList<Object> values = new ArrayList<>();
 
-        int i = 0;
         int jlies = 0;
-        for(Attribut a : r2.getMembres()) {
+        for(int i = 0; i<r2.getMembres().size(); i++) {
             // SI a est lie 
             //   la i eme colonne de r2 doit etre egale à 
             if(!indexInList(i, attrLibres)) {
@@ -205,7 +204,6 @@ public class TGD extends Contrainte {
                 values.add(T.getObject(attrLies.get(jlies) + 1));
                 jlies++;
             }
-            i++;
         }
 
         return db.SelectQuery(r2.getNomTable(), attr, values);

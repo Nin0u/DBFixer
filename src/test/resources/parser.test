@@ -1,4 +1,0 @@
-3
-Rel(a_1, b) ^ Ral(a_2, b) -> (a_1 # a_2)
-Eleve(nss_1, nom_1, prenom_1, age_1) ^ Eleve(nss_2, nom_2, prenom_2, age_2) ^ (nss_1 # nss_2) -> (nom_1 # nom_2) ^ (prenom_1 # prenom_2) ^ (age_1 # age_2)
-Eleve(nss=3, nom, prenom, age) -> (nom # prenom) ^ (age # age=43)
