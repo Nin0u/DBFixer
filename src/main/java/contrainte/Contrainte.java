@@ -194,11 +194,17 @@ public abstract class Contrainte {
     
     /** 
      * Méthode abstraite qui effectue soit une egalisation soit un ajoute de tuple
-     * selon si on est une TGD ou une EGD
+     * selon si on est une EGD ou une TGD
      * 
-     * @param T Tuple trouvé qui respecte le corps mais pas la tête
+     * @param req La requête permettant de trouver les tuples qui respectent le corps
+     * @param db La base de données
      */
     public abstract int action(String req, Database db);
+
+    /**
+     * Méthode abstraite pour la oblivious chase.
+     */
+    public abstract int actionOblivious(String req, Database db);
 
     /** Méthode d'affichage */
     public abstract void affiche();

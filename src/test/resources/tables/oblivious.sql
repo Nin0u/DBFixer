@@ -1,0 +1,8 @@
+Drop TABLE IF EXISTS E;
+
+CREATE TABLE E(
+    a VARCHAR,
+    b VARCHAR
+);
+
+INSERT INTO E VALUES ('a', 'b');

@@ -140,6 +140,10 @@ public class EGD extends Contrainte {
         }
     }
 
+    public int actionOblivious(String req, Database db){
+        return action(req, db);
+    }
+
     private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
         
