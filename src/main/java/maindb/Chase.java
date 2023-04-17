@@ -112,9 +112,9 @@ public class Chase {
         HashMap<Contrainte, HashMap<ArrayList<String>, Integer>> tuples_liees = new HashMap<Contrainte, HashMap<ArrayList<String>, Integer>>();
         for (Contrainte c : sigma) 
             tuples_liees.put(c, new HashMap<ArrayList<String>, Integer>());
-
         while(! end) {
             end = true;
+
             for(Contrainte c : sigma) {
                 System.out.println("DEBUT REPAIR");
                 c.repairType(db);

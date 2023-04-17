@@ -266,6 +266,10 @@ public class TGD extends Contrainte {
                     orderAttribut.add(a);
             }
 
+            
+            // Regarde si on ajoute au moins un tuple dans la contrainte
+            boolean tupleAjoute = false;
+
             // Pour chaque tuple
             while(T.next()) {
                 for(int i = 0; i < orderAttribut.size(); i++) {
@@ -294,50 +298,42 @@ public class TGD extends Contrainte {
                     }
 
                     ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
-                    // Vérifier si on a un tuple
-                    // Si on en a un c'est ok on continue
-                    ResultSet res  = VerifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
-                    
 
-                    // On doit peut-être ajouter un tuple s'il n'y a rien
-                    if (!res.next()) {
-                        ret = 1;
-                        // On récupère les valeurs des attributs liés du tuple
-                        ArrayList<String> valeursLiees = new ArrayList<String>();
-                        for(int i : attrLies){
-                            valeursLiees.add(T.getString(i + 1)); 
+                    ret = 1;
+                    // On récupère les valeurs des attributs liés du tuple
+                    ArrayList<String> valeursLiees = new ArrayList<String>();
+                    for(int i : attrLies)
+                        valeursLiees.add(T.getString(i + 1)); 
+
+                    // On cherche dans null_generes notre tuple : si notre tuple est dans null_genere on n'insère rien
+                    if(null_generes.get(valeursLiees) != null)
+                        continue;
+
+                    // Sinon on insère un tuple et on l'ajoute dans null_genere
+                    System.out.println("Ajout de tuple");
+                    tupleAjoute = true;
+
+                    // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
+                    // Si ce n'est pas le cas on doit alterer la table                 
+                    for(Integer index : attrLibres){
+                        String columnTypeName = metaData.getColumnTypeName(index + 1);
+                        String nom_attr = metaData.getColumnLabel(index + 1);
+                        System.out.println(columnTypeName);
+                        if(!columnTypeName.startsWith("null_")){
+                            String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
+                            db.updateRequest(alterReq);
+                            System.out.println("Create Type null_" + columnTypeName);
                         }
-
-                        // On cherche dans null_generes notre tuple 
-                        if(null_generes.get(valeursLiees) != null)
-                            continue;
-                        
-                        // Si notre tuple est dans null_genere on n'insère rien
-
-                        // Sinon on insère un tuple et on l'ajoute dans null_genere
-                        System.out.println("Ajout de tuple");
-                        // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
-                        // Si ce n'est pas le cas on doit alterer la table                        
-
-                        for(Integer index : attrLibres){
-                            String columnTypeName = metaData.getColumnTypeName(index + 1);
-                            String nom_attr = metaData.getColumnLabel(index + 1);
-                            System.out.println(columnTypeName);
-                            if(!columnTypeName.startsWith("null_")){
-                                String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
-                                db.updateRequest(alterReq);
-                                System.out.println("Create Type null_" + columnTypeName);
-                            }
-                        }
-
-                        // On insère le tuple et on ajoute le tupe dans null_generes
-                        InsertReq(db, r2, T, attrLies, attrLibres);
-                        null_generes.put(valeursLiees, num_null);
                     }
 
+                    // On insère le tuple et on ajoute le tupe dans null_generes
+                    InsertReq(db, r2, T, attrLies, attrLibres);
+                    null_generes.put(valeursLiees, num_null);
                 }
             }
 
+            // Si on a ajouté aucun tuple on peut stopper la chase
+            if(!tupleAjoute) return 0;
             return ret;
         } catch (SQLException e){
             e.printStackTrace();
