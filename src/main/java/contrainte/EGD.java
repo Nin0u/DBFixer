@@ -140,7 +140,13 @@ public class EGD extends Contrainte {
         }
     }
 
+    // TODO : à adapter à la section Oblivious et skolem pour EGD
     public int actionOblivious(String req, Database db){
+        return action(req, db);
+    }
+
+    // TODO : à adapter à la section Oblivious et skolem pour EGD
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes){
         return action(req, db);
     }
 

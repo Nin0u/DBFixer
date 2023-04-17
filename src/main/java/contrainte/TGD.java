@@ -177,12 +177,6 @@ public class TGD extends Contrainte {
         }
     }
 
-    /**
-     * Ajoute un nouveau tuple u tq db union u satisfait e
-     *
-     * @param req la requête qui permet d'obtenir les tuples qui respectent le corps
-     * @param db la base de donnée
-     */
     public int actionOblivious(String req, Database db){
         try {
             int ret = 0;
@@ -247,6 +241,99 @@ public class TGD extends Contrainte {
 
                     // On insère le tuple
                     InsertReq(db, r2, T, attrLies, attrLibres);
+
+                }
+            }
+
+            return ret;
+        } catch (SQLException e){
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes){
+        try {
+            int ret = 0;
+
+            // On récupère les tuples qui respectent le corps
+            ResultSet T = db.selectRequest(req);
+
+            // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
+            ArrayList<Attribut> orderAttribut = new ArrayList<>();
+            for(Relation rel : rlCorps) {
+                for(Attribut a : rel.getMembres())
+                    orderAttribut.add(a);
+            }
+
+            // Pour chaque tuple
+            while(T.next()) {
+                for(int i = 0; i < orderAttribut.size(); i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                // On regarde les relations dans la tête
+                for (Relation r2 : rlTete){
+                    // On construit les variables libres et liées 
+                    ArrayList<Integer> attrLies = new ArrayList<Integer>();
+                    ArrayList<Integer> attrLibres = new ArrayList<Integer>();
+
+                    int j = 0;
+                    for(Attribut a2 : r2.getMembres()) {
+                        boolean find = false;
+                        for(int i = 0; i < orderAttribut.size(); i++) {
+                            if(a2.equals(orderAttribut.get(i))) {
+                                attrLies.add(i);
+                                find = true;
+                                break;
+                            }
+                        }
+                        if(!find) attrLibres.add(j); 
+                        j++;
+                    }
+
+                    ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
+                    // Vérifier si on a un tuple
+                    // Si on en a un c'est ok on continue
+                    ResultSet res  = VerifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
+                    
+
+                    // On doit peut-être ajouter un tuple s'il n'y a rien
+                    if (!res.next()) {
+                        ret = 1;
+                        // On récupère les valeurs des attributs liés du tuple
+                        ArrayList<String> valeursLiees = new ArrayList<String>();
+                        for(int i : attrLies){
+                            valeursLiees.add(T.getString(i + 1)); 
+                        }
+
+                        // On cherche dans null_generes notre tuple 
+                        if(null_generes.get(valeursLiees) != null)
+                            continue;
+                        
+                        // Si notre tuple est dans null_genere on n'insère rien
+
+                        // Sinon on insère un tuple et on l'ajoute dans null_genere
+                        System.out.println("Ajout de tuple");
+                        // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
+                        // Si ce n'est pas le cas on doit alterer la table                        
+
+                        for(Integer index : attrLibres){
+                            String columnTypeName = metaData.getColumnTypeName(index + 1);
+                            String nom_attr = metaData.getColumnLabel(index + 1);
+                            System.out.println(columnTypeName);
+                            if(!columnTypeName.startsWith("null_")){
+                                String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
+                                db.updateRequest(alterReq);
+                                System.out.println("Create Type null_" + columnTypeName);
+                            }
+                        }
+
+                        // On insère le tuple et on ajoute le tupe dans null_generes
+                        InsertReq(db, r2, T, attrLies, attrLibres);
+                        null_generes.put(valeursLiees, num_null);
+                    }
 
                 }
             }

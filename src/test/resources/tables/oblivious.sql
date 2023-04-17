@@ -5,4 +5,9 @@ CREATE TABLE E(
     b VARCHAR
 );
 
-INSERT INTO E VALUES ('a', 'b');
+CREATE TABLE F(
+    c VARCHAR,
+    d VARCHAR
+);
+
+INSERT INTO E VALUES('a', 'b')

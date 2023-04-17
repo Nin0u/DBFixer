@@ -206,6 +206,11 @@ public abstract class Contrainte {
      */
     public abstract int actionOblivious(String req, Database db);
 
+    /**
+     * Méthode abstraite pour la oblivious chase.
+     */
+    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes);
+
     /** Méthode d'affichage */
     public abstract void affiche();
 

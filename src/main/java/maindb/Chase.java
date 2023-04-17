@@ -2,7 +2,9 @@ package maindb;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
+
 import contrainte.*;
 
 public class Chase {
@@ -19,7 +21,7 @@ public class Chase {
                 break;
 
             case SKOLEM : 
-                System.out.println("Pas encore implémenté");
+                skolemChase(db, sigma);
                 break;
 
             case OBEGD : 
@@ -91,7 +93,6 @@ public class Chase {
                             System.out.println(String.valueOf(OBLIVIOUS_LIMIT) + " itérations effectuées : Voulez-vous continuer ? [y/n]");
                             String a = sc.nextLine();
                             sc.close();
-                            System.out.println("Lu :" + a);
                             a = a.toLowerCase();
                             if (a.equals("y") || a.equals("o")) limit = 0;
                             else break;
@@ -101,6 +102,39 @@ public class Chase {
                 System.out.println();
             }
 
+        }
+    }
+
+    // Oblivious Skolem chase
+    private static void skolemChase(Database db, ArrayList<Contrainte> sigma) throws SQLException{
+        boolean end = false;
+
+        HashMap<Contrainte, HashMap<ArrayList<String>, Integer>> tuples_liees = new HashMap<Contrainte, HashMap<ArrayList<String>, Integer>>();
+        for (Contrainte c : sigma) 
+            tuples_liees.put(c, new HashMap<ArrayList<String>, Integer>());
+
+        while(! end) {
+            end = true;
+            for(Contrainte c : sigma) {
+                System.out.println("DEBUT REPAIR");
+                c.repairType(db);
+                System.out.println("FIN REPAIR");
+                int ret = 0;
+                if(c instanceof EGD) {
+                    while(true) {
+                        ret = c.action(c.executeCorps(db), db);
+
+                        if(ret == -1) return;
+                        if(ret == 1) end = false;
+                        if(ret == 0) break;
+                    }
+                } else {
+                    ret = c.actionSkolem(c.executeCorps(db), db, tuples_liees.get(c));
+                    if(ret == -1) return;
+                    if(ret == 1) end = false;
+                }
+                System.out.println();
+            }
         }
     }
 }
