@@ -33,7 +33,12 @@ public class TGD extends Contrainte {
     /** Liste contenant les relations de la tete. */
     private ArrayList<Relation> rlTete;
     
-    /** Constructeur */
+    /** 
+     * Constructeur 
+     * 
+     * @param rlCorps La liste des relations du Corps.
+     * @param rlTete La liste des relations de la Tete.
+     */
     public TGD(ArrayList<Relation> rlCorps, ArrayList<Relation> rlTete){
         super(rlCorps, null);
         this.rlTete = rlTete;
@@ -95,11 +100,14 @@ public class TGD extends Contrainte {
     /**
      * Ajoute un nouveau tuple u tq db union u satisfait e
      *
-     * @param req la requête qui permet d'obtenir les tuples qui respectent le corps
-     * @param db la base de donnée
+     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
+     * @param db La base de donnée
+     * 
+     * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
-    public int action(String req, Database db){
+    public int action(String req, Database db) throws SQLException {
         try {
+            // Valeur de retour
             int ret = 0;
 
             // On récupère les tuples qui respectent le corps
@@ -144,7 +152,6 @@ public class TGD extends Contrainte {
                     // Si on en a un c'est ok on continue
                     ResultSet res  = VerifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
                     
-
                     // On doit ajouter un tuple si il n'y a rien
                     if (!res.next()) {
                         System.out.println("Ajout de tuple");
@@ -177,8 +184,17 @@ public class TGD extends Contrainte {
         }
     }
 
-    public int actionOblivious(String req, Database db){
+    /**
+     * Ne vérifie pas que la tête d’une contrainte n’est pas satisfaite pour l’appliquer.
+     * 
+     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
+     * @param db La base de donnée
+     * 
+     * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
+     */
+    public int actionOblivious(String req, Database db) throws SQLException {
         try {
+            // Valeur de retour
             int ret = 0;
 
             // On récupère les tuples qui respectent le corps
@@ -252,8 +268,18 @@ public class TGD extends Contrainte {
         }
     }
 
-    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes){
+    /** 
+     * Génère les NULL en fonction du domaine et de la contrainte
+     * 
+     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
+     * @param db La base de donnée
+     * @param null_generes Map associant un tuple (liste de String) à un numéro de NULL
+     * 
+     * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
+     */
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes) throws SQLException{
         try {
+            // Valeur de retour
             int ret = 0;
 
             // On récupère les tuples qui respectent le corps
@@ -265,7 +291,6 @@ public class TGD extends Contrainte {
                 for(Attribut a : rel.getMembres())
                     orderAttribut.add(a);
             }
-
             
             // Regarde si on ajoute au moins un tuple dans la contrainte
             boolean tupleAjoute = false;
@@ -298,6 +323,9 @@ public class TGD extends Contrainte {
                     }
 
                     ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
+
+                    // Comme pour Oblivious on ne vérifie pas si un tuple vérifie la contrainte
+                    // On essaye directement d'ajouter le tuple : il faut maintenant vérifier si le tuple est présent dans null_generes ou non
 
                     ret = 1;
                     // On récupère les valeurs des attributs liés du tuple
@@ -346,6 +374,7 @@ public class TGD extends Contrainte {
      * 
      * @param r2 La relation de la tête
      * @param T L'ensemble des tuples respectant le corps
+     * @param rsmd Les métadonées
      * @param orderAttribut L'ordre des attributs dans la relation
      * @param attrLies Liste d'indice des attributs liés
      * @param attrLibres Liste d'indice des attributs libres
@@ -372,8 +401,7 @@ public class TGD extends Contrainte {
     }
 
     /**
-     * Fonction permettant de générer la requete créant une nouveau type NULL.
-     * Cette fonction s'occupera d'incrémenter
+     * Génére la requete créant une nouveau type NULL.
      * 
      * @param nomvar Le nom de la variable qui nécéssite l'appel à la fonction
      * @param typevar Le type de la variable
@@ -395,15 +423,15 @@ public class TGD extends Contrainte {
     }
 
     /**
-     * Construit la requete d'insertion 
+     * Construit la requete d'insertion et l'exécute.
+     * Cette fonction s'occupe d'incrémenter num_null.
      * 
+     * @param db La base de donnée
      * @param r La relation
-     * @param T le Tuple
-     * @param rsmd les metadonnées de T
-     * @param orderAttribut Liste des attributs dans l'ordre
-     * @param attrLies List d'indice des attributs lies
+     * @param T Le Tuple
+     * @param attrLies Liste d'indice des attributs lies
+     * @param attrLibres Liste d'indice des attributs libres
      * 
-     * @return La requête d'insertion
      * @throws SQLException
      */
     private void InsertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{

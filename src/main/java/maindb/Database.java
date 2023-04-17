@@ -17,7 +17,11 @@ public class Database {
 
     private Connection conn;
 
-    /** Constructeur */
+    /** 
+     * Constructeur 
+     * 
+     * @param is Le flot d'entrée pour les login de la base.
+     */
     public Database(InputStream is){
         Scanner sc = new Scanner(is);
         if(is.equals(System.in)) System.out.print("URL = ");
@@ -34,21 +38,17 @@ public class Database {
     }
     
     /** Connexion a la BD */
-    public void connect() {
-        try {
-            conn = DriverManager.getConnection(url, user, password);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+    public void connect() throws SQLException{
+        conn = DriverManager.getConnection(url, user, password);
     }
 
+    /** Fermeture de la connexion */
     public void close() throws SQLException {
         conn.close();
     }
 
     /** Traite une requete SELECT */
-    public ResultSet selectRequest(String selectSQL){
+    public ResultSet selectRequest(String selectSQL) {
         ResultSet res = null;
         try {
             PreparedStatement pstmt = conn.prepareStatement(selectSQL);
@@ -60,7 +60,7 @@ public class Database {
         return res;
     }
 
-    public ResultSet selectUpdate(String selectSQL) {
+    public ResultSet selectUpdate(String selectSQL)  {
         ResultSet res = null;
         try {
             PreparedStatement stmt = conn.prepareStatement(selectSQL,
@@ -174,7 +174,6 @@ public class Database {
             System.out.println(pstmt);
             res = pstmt.executeUpdate();
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return res;

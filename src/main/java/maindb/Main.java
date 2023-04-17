@@ -11,21 +11,23 @@ import contrainte.*;
 
 public class Main{
     // Arguments qu'on peut passer au main
-    public static final String DFP = "-dfp="; // DF Path
-    public static final String DBLP = "-dblp="; // DB Login Path
-    public static final String MODE = "-mode="; // Chase Mode
-    public static final String HELP = "-help";
+    private static final String DFP = "-dfp="; // DF Path
+    private static final String DBLP = "-dblp="; // DB Login Path
+    private static final String MODE = "-mode="; // Chase Mode
+    private static final String HELP = "-help";
 
-    public static InputStream is = System.in;
-    public static InputStream login = System.in;
-    public static ChaseMode mode = ChaseMode.STANDARD;
+    private static InputStream is = System.in; // Flot d'entrée pour les DF
+    private static InputStream login = System.in; // Flot d'entré pour les login de la BD
+    private static ChaseMode mode = ChaseMode.STANDARD; // Mode de Chase
 
     public static void main(String[] args) throws SQLException{
+        // Si on a plus de 3 arguments : Erreur
         if (args.length > 3){
             System.out.println("Nombre d'arguments invalide. Lancer le programme avec -help pour plus de détails");
             return;
         }
 
+        // Traitement du -help
         if (args.length == 1 && args[0].equals(HELP)) {
             printHelp();
             return;
@@ -74,9 +76,13 @@ public class Main{
         }
         
         // On lance la chase
-        db.connect();
-        Chase.chase(mode, db, contraintes);
-        db.close();
+        try {
+            db.connect();
+            Chase.chase(mode, db, contraintes);
+            db.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 

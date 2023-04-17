@@ -19,7 +19,13 @@ public class EGD extends Contrainte {
     /** Liste des égalités dans la tête. */
     private ArrayList<Egalite> egTete;
 
-    /** Constructeur */
+    /** 
+     * Constructeur 
+     * 
+     * @param rlCorps La liste des relations du Corps.
+     * @param egCorps La liste des égalités du Corps.
+     * @param egTete La liste des égalités de la Tete.
+     */
     public EGD(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete){
         super(rlCorps, egCorps);
         this.egTete = egTete;
@@ -79,7 +85,7 @@ public class EGD extends Contrainte {
      * @param req la requête permettant d'obtenir les tuples qui respecte le corps mais pas la tête d'une DF
      * @param db la base de donnée
      */
-    public int action(String req, Database db){
+    public int action(String req, Database db) throws SQLException {
         int nb = 0;
 
         ResultSet T = db.selectRequest(req);
@@ -141,12 +147,12 @@ public class EGD extends Contrainte {
     }
 
     // TODO : à adapter à la section Oblivious et skolem pour EGD
-    public int actionOblivious(String req, Database db){
+    public int actionOblivious(String req, Database db) throws SQLException {
         return action(req, db);
     }
 
     // TODO : à adapter à la section Oblivious et skolem pour EGD
-    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes){
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes) throws SQLException {
         return action(req, db);
     }
 

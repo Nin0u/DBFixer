@@ -2,7 +2,6 @@ package contrainte;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -10,20 +9,20 @@ import atome.*;
 import maindb.Database;
 import variable.Attribut;
 
+/** Super classe pour les EGD et TGD */
 public abstract class Contrainte {
-    /**
-     * Le corps est une conjonction d'atomes qui sont:
-     * - Des relations pour les TGD
-     * - Des relations et des egalités pour les EGS
-     * 
-     * On stocke les relations dans la superclasse.
-     */
+    /** Relations du Corps de la contrainte. LES EGD et les TGD en ont.*/
     protected ArrayList<Relation> rlCorps;
 
-    /** On laisse les egalites du corps ici pour executeCorps */
+    /** Egalités du Corps : La Liste est dans la superclasse pour executeCorps */
     protected ArrayList<Egalite> egCorps;
 
-    /** Constructeur */
+    /** 
+     * Constructeur 
+     * 
+     * @param rlCorps La liste des relations du Corps.
+     * @param egCorps La liste des égalités du Corps.
+     */
     protected Contrainte(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps) {
         this.rlCorps = rlCorps;
         this.egCorps = egCorps;
@@ -44,6 +43,7 @@ public abstract class Contrainte {
         String from = "FROM ";
         String where = "WHERE ";
 
+        // Alias des Attributs : ils seront tous nommés T_i
         HashMap<Relation, String> map = new HashMap<>();
 
         int i = 0;
@@ -183,33 +183,22 @@ public abstract class Contrainte {
             }
         }
     }
-
-    protected boolean isWriteType(int t) {
-        return (t == Types.VARCHAR) ||
-               (t == Types.VARBINARY) ||
-               (t == Types.NVARCHAR) ||
-               (t == Types.LONGNVARCHAR) ||
-               (t == Types.DATE);
-    }
     
     /** 
      * Méthode abstraite qui effectue soit une egalisation soit un ajoute de tuple
      * selon si on est une EGD ou une TGD
-     * 
-     * @param req La requête permettant de trouver les tuples qui respectent le corps
-     * @param db La base de données
      */
-    public abstract int action(String req, Database db);
+    public abstract int action(String req, Database db) throws SQLException;
 
     /**
      * Méthode abstraite pour la oblivious chase.
      */
-    public abstract int actionOblivious(String req, Database db);
+    public abstract int actionOblivious(String req, Database db) throws SQLException;
 
     /**
      * Méthode abstraite pour la oblivious chase.
      */
-    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes);
+    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes) throws SQLException;
 
     /** Méthode d'affichage */
     public abstract void affiche();
