@@ -85,7 +85,6 @@ public class Main{
         }
     }
 
-
     /** Affiche l'aide */
     public static void printHelp(){
         System.out.println("Le programme prend 3 options au maximum de la forme -option (sans espace).");

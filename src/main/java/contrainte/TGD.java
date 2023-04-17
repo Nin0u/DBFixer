@@ -388,8 +388,6 @@ public class TGD extends Contrainte {
 
         int jlies = 0;
         for(int i = 0; i<r2.getMembres().size(); i++) {
-            // SI a est lie 
-            //   la i eme colonne de r2 doit etre egale à 
             if(!indexInList(i, attrLibres)) {
                 attr.add(rsmd.getColumnLabel(i + 1));
                 values.add(T.getObject(attrLies.get(jlies) + 1));

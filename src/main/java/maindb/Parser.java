@@ -10,9 +10,7 @@ import atome.*;
 import variable.*;
 
 public class Parser {
-
     // Regex pour test si egalite ou relation
-    // ! Remarque : Une egalite est de la forme x # y, le = servant aux constantes
     private static final String var_regex = "[a-zA-Z]+[a-zA-Z0-9]*(?:_[0-9]+)?";
     private static final Pattern p_egalite = Pattern.compile("\\([ ]*" + var_regex + "[ ]*=[ ]*" + var_regex + "[ ]*\\)");
     private static final Pattern p_relation = Pattern.compile("[a-zA-Z]+[a-zA-Z0-9]*[ ]*\\([ ]*" + var_regex + "(,[ ]*"  + var_regex + "[ ]*)*" + "[ ]*\\)");
@@ -39,8 +37,9 @@ public class Parser {
             return null;
         }
 
+        // On lit les lignes une par une
         for(int i = 0; i < n; i++){
-            // On lit la ligne
+            // On lit une ligne
             if(in.equals(System.in)) System.out.print("DF n°" + String.valueOf(i) + " : ");
             String line = sc.nextLine();
             line = line.trim();
@@ -95,20 +94,20 @@ public class Parser {
         if(conj.equals("")) return false;
 
         // On créer un tableau avec chaque terme de la conjonction
-        String[] atome = conj.split("\\^");
+        String[] atomes = conj.split("\\^");
         
         // On parcourt les atomes
-        for(String s : atome){
-            s = s.trim();
-            if (s.equals("")) return false;
+        for(String atome : atomes){
+            atome = atome.trim();
+            if (atome.equals("")) return false;
             
-            // Si s est un égalité
-            if (p_egalite.matcher(s).find()){
+            // Si l'atome est un égalité
+            if (p_egalite.matcher(atome).find()){
                 // On enlève les parenthèses
-                s = s.substring(1, s.length() - 1);
+                atome = atome.substring(1, atome.length() - 1);
 
                 // On sépare à l'égalité
-                String[] membres = s.split("=");
+                String[] membres = atome.split("=");
                 
                 // On parse chaque variable de l'égalité en regardant si elles ont un indice ou non
                 // Soit on a un indice _i soit rien et dans ce cas l'indice est 0 par défaut
@@ -127,25 +126,21 @@ public class Parser {
                 eg.add(new Egalite(variables[0], variables[1]));
             }
             
-            // si s est une relation
-            else if(p_relation.matcher(s).find()){
-                // On peut couper à ( pour récupérer la table au début
-                String[] membres = s.split("\\(");
-                if (membres.length != 2) return false;
-                
-                // on enlève )
-                membres[1] = membres[1].substring(0, membres[1].length() -1);
+            // si l'atome est une relation
+            else if(p_relation.matcher(atome).find()){
 
-                // On trim
-                for (int i = 0; i < 2; i++){
-                    membres[i] = membres[i].trim();
-                    if (membres[i].equals("")) return false;
-                }
-                
+                // On sépare à ( pour récupérer la table au début
+                String[] sep = atome.split("\\(");
+                if (sep.length != 2) return false;
+
+                String table = sep[0].trim();
+                String membres = sep[1].substring(0, sep[1].length() -1); // on enlève ) aux membres de la relation
+                if (table.equals("") || membres.equals("")) return false;
+
                 // On balaye chaque attribut intervenant dans la relation
-                Relation r = new Relation(membres[0]);
+                Relation r = new Relation(table); 
                 
-                String[] attr = membres[1].split(",");
+                String[] attr = membres.split(",");
                 for (int i = 0; i < attr.length; i++){
                     attr[i] = attr[i].trim();
                     if (attr[i].equals("")) return false;

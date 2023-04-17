@@ -8,8 +8,18 @@ import java.util.Scanner;
 import contrainte.*;
 
 public class Chase {
+    /** Limite d'un tour d'Oblivious Chase : quand cette limite est atteinte, on demande à l'utilisateur si on veut refaire un tour. */
     private static final int OBLIVIOUS_LIMIT = 5;
 
+    /** 
+     * Execute la chase 
+     * 
+     * @param mode Le mode de chase.
+     * @param db La base de donnée
+     * @param sigma La liste des contraintes
+     * 
+     * @throws SQLException
+     */
     public static void chase(ChaseMode mode, Database db, ArrayList<Contrainte> sigma) throws SQLException{
         switch(mode){
             case STANDARD :
