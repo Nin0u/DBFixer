@@ -215,7 +215,6 @@ public class Chase {
                     db.insertReq(delete, values);
 
                     // Si D satisfait sigma on retire définitivement notre tuple
-                    // TODO
                     if (satisfy(db, sigma)) continue;
 
                     // Sinon on rajoute le tuple
@@ -230,5 +229,23 @@ public class Chase {
                 }
             }
         } 
+    }
+
+    public static boolean satisfy(Database db, ArrayList<Contrainte> sigma) {
+        try {
+            boolean b = true;
+            for(Contrainte c : sigma) {
+                if(c instanceof EGD) {
+                    b = b && c.actionSatisfy(c.executeCorps(db), db);
+                } else {
+                    b = b && c.actionSatisfy(c.executeCorps(db), db);
+                }
+            }
+
+            return b;
+        } catch(SQLException e){
+            e.printStackTrace();
+            return false;
+        }
     }
 }

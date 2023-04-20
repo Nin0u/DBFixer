@@ -474,6 +474,70 @@ public class TGD extends Contrainte {
     }
 
     /**
+     * Vérifies si la TGD est satisfaite par la db
+     * 
+     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
+     * @param db La base de donnée
+     * 
+     * @return Un booléen
+     */
+    public boolean actionSatisfy(String req, Database db) throws SQLException {
+        try {
+            // On récupère les tuples qui respectent le corps
+            ResultSet T = db.selectRequest(req);
+
+            // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
+            ArrayList<Attribut> orderAttribut = new ArrayList<>();
+            for(Relation rel : rlCorps) {
+                for(Attribut a : rel.getMembres())
+                    orderAttribut.add(a);
+            }
+
+            // Pour chaque tuple
+            while(T.next()) {
+                for(int i = 0; i < orderAttribut.size(); i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                // On regarde les relations dans la tête
+                for (Relation r2 : rlTete){
+                    // On construit les variables libres et liées 
+                    ArrayList<Integer> attrLies = new ArrayList<Integer>();
+                    ArrayList<Integer> attrLibres = new ArrayList<Integer>();
+
+                    int j = 0;
+                    for(Attribut a2 : r2.getMembres()) {
+                        boolean find = false;
+                        for(int i = 0; i < orderAttribut.size(); i++) {
+                            if(a2.equals(orderAttribut.get(i))) {
+                                attrLies.add(i);
+                                find = true;
+                                break;
+                            }
+                        }
+                        if(!find) attrLibres.add(j); 
+                        j++;
+                    }
+
+                    ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
+                    // Vérifier si on a un tuple
+                    // Si on en a un c'est ok on continue
+                    ResultSet res  = verifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
+                    
+                    // Si on doit ajouter un tuple ça veut dire que la TGD n'est pas satisfaite
+                    if (!res.next()) return false;
+                }
+            }
+
+            return true;
+        } catch (SQLException e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Construit la requete vérificatrice d'une relation de la tête
      * 
      * @param r2 La relation de la tête

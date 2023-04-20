@@ -200,6 +200,9 @@ public abstract class Contrainte {
     /** Méthode abstraite pour la core chase. */
     public abstract int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException;
 
+    /** Méthode abstraite pour vérifier qu'une DB satifait des contraintes */
+    public abstract boolean actionSatisfy(String res, Database db)  throws SQLException;
+
     /** Méthode abstraite d'affichage */
     public abstract void affiche();
 

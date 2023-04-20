@@ -108,7 +108,7 @@ public class EGD extends Contrainte {
         
         try {
             ResultSetMetaData rsmd = T.getMetaData();
-            boolean end = false; // Sert à r 
+            boolean end = false; // TODO Sert à r ? 
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");
@@ -160,6 +160,11 @@ public class EGD extends Contrainte {
     // TODO : à adapter ?
     public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException {
         return action(req, db);
+    }
+
+    // TODO : à adapter ?
+    public boolean actionSatisfy(String req, Database db) throws SQLException {
+        return true;
     }
 
     private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
