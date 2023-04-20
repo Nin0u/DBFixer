@@ -5,9 +5,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +46,10 @@ public class TGD extends Contrainte {
         super(rlCorps, null);
         this.rlTete = rlTete;
     }
+
+    /** Getter */
+    public ArrayList<Relation> getRelTete() { return rlTete; }
+
 
     public void repairType(Database db) throws SQLException {
         //super.repairType(db);
