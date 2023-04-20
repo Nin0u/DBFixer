@@ -50,7 +50,6 @@ public class TGD extends Contrainte {
     /** Getter */
     public ArrayList<Relation> getRelTete() { return rlTete; }
 
-
     public void repairType(Database db) throws SQLException {
         //super.repairType(db);
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
@@ -453,12 +452,12 @@ public class TGD extends Contrainte {
                         // Le 1e element sera le nom de la table !
                         ArrayList<Object> add = new ArrayList<Object>();
                         add.add(r2.getNomTable());
-                        for(int i = 1; i <= metaData.getColumnCount() ; i++) {
+                        for(int i = 1; i <= metaData.getColumnCount(); i++) {
                             if (indexInList(i - 1, attrLibres)) {
                                 num_null++;
                                 add.add("(" + String.valueOf(num_null) + ", NULL)");
-                            } else 
-                                add.add(T.getObject(i));
+                            } 
+                            else add.add(T.getObject(i));
                         }
                         toAdd.add(add);
                     }
@@ -604,8 +603,7 @@ public class TGD extends Contrainte {
         String req = "INSERT INTO "; 
         if(values == null) {
             req += r.getNomTable() + " VALUES (";
-        
-            values = new ArrayList<>();
+            values = new ArrayList<Object>();
             int jlies = 0;
 
             for(int i = 0; i < r.getMembres().size(); i++) {
@@ -623,6 +621,7 @@ public class TGD extends Contrainte {
             req += values.get(0) + " VALUES (";
             for(int i = 1; i < values.size(); i++)
                 req += "?, ";
+            values.remove(0);
         }
         
         req = req.substring(0, req.length() - 2) + ")";
