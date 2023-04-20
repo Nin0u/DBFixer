@@ -10,6 +10,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import atome.*;
 import variable.*;
@@ -150,7 +151,7 @@ public class TGD extends Contrainte {
                     ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
                     // Vérifier si on a un tuple
                     // Si on en a un c'est ok on continue
-                    ResultSet res  = VerifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
+                    ResultSet res  = verifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
                     
                     // On doit ajouter un tuple si il n'y a rien
                     if (!res.next()) {
@@ -171,7 +172,7 @@ public class TGD extends Contrainte {
                         }
 
                         // On insère le tuple
-                        InsertReq(db, r2, T, attrLies, attrLibres);
+                        insertReq(db, r2, T, attrLies, attrLibres, null);
                     }
 
                 }
@@ -256,7 +257,7 @@ public class TGD extends Contrainte {
                     }
 
                     // On insère le tuple
-                    InsertReq(db, r2, T, attrLies, attrLibres);
+                    insertReq(db, r2, T, attrLies, attrLibres, null);
 
                 }
             }
@@ -277,7 +278,7 @@ public class TGD extends Contrainte {
      * 
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
-    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes) throws SQLException{
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> nullGeneres) throws SQLException{
         try {
             // Valeur de retour
             int ret = 0;
@@ -334,7 +335,7 @@ public class TGD extends Contrainte {
                         valeursLiees.add(T.getString(i + 1)); 
 
                     // On cherche dans null_generes notre tuple : si notre tuple est dans null_genere on n'insère rien
-                    if(null_generes.get(valeursLiees) != null)
+                    if(nullGeneres.get(valeursLiees) != null)
                         continue;
 
                     // Sinon on insère un tuple et on l'ajoute dans null_genere
@@ -355,13 +356,110 @@ public class TGD extends Contrainte {
                     }
 
                     // On insère le tuple et on ajoute le tupe dans null_generes
-                    InsertReq(db, r2, T, attrLies, attrLibres);
-                    null_generes.put(valeursLiees, num_null);
+                    insertReq(db, r2, T, attrLies, attrLibres, null);
+                    nullGeneres.put(valeursLiees, num_null);
                 }
             }
 
             // Si on a ajouté aucun tuple on peut stopper la chase
             if(!tupleAjoute) return 0;
+            return ret;
+        } catch (SQLException e){
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * Fait l'union des tuples à ajouter avant d'ajouter les tuples en question
+     * L'utilisation de HashSet gère les doublons automatiquement.
+     *
+     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
+     * @param db La base de donnée
+     * 
+     * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
+     */
+    public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException {
+        try {
+            // Valeur de retour
+            int ret = 0;
+
+            // On récupère les tuples qui respectent le corps
+            ResultSet T = db.selectRequest(req);
+
+            // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
+            ArrayList<Attribut> orderAttribut = new ArrayList<>();
+            for(Relation rel : rlCorps) {
+                for(Attribut a : rel.getMembres())
+                    orderAttribut.add(a);
+            }
+
+            // Pour chaque tuple
+            while(T.next()) {
+                for(int i = 0; i < orderAttribut.size(); i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                // On regarde les relations dans la tête
+                for (Relation r2 : rlTete){
+                    // On construit les variables libres et liées 
+                    ArrayList<Integer> attrLies = new ArrayList<Integer>();
+                    ArrayList<Integer> attrLibres = new ArrayList<Integer>();
+
+                    int j = 0;
+                    for(Attribut a2 : r2.getMembres()) {
+                        boolean find = false;
+                        for(int i = 0; i < orderAttribut.size(); i++) {
+                            if(a2.equals(orderAttribut.get(i))) {
+                                attrLies.add(i);
+                                find = true;
+                                break;
+                            }
+                        }
+                        if(!find) attrLibres.add(j); 
+                        j++;
+                    }
+
+                    ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
+                    // Vérifier si on a un tuple
+                    // Si on en a un c'est ok on continue
+                    ResultSet res  = verifReq(db, r2, T, metaData, orderAttribut, attrLies, attrLibres);
+                    
+                    // On doit ajouter un tuple si il n'y a rien
+                    // Ici l'ajout de tuple se fait non pas dans la BD mais dans la liste
+                    if (!res.next()) {
+                        ret = 1;
+                        // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
+                        // Si ce n'est pas le cas on doit alterer la table                        
+                        for(Integer index : attrLibres){
+                            String columnTypeName = metaData.getColumnTypeName(index + 1);
+                            String nom_attr = metaData.getColumnLabel(index + 1);
+                            System.out.println(columnTypeName);
+                            if(!columnTypeName.startsWith("null_")){
+                                String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
+                                db.updateRequest(alterReq);
+                                System.out.println("Create Type null_" + columnTypeName);
+                            }
+                        }
+
+                        // On ajoute notre tuple dans la liste de tuple
+                        // Le 1e element sera le nom de la table !
+                        ArrayList<Object> add = new ArrayList<Object>();
+                        add.add(r2.getNomTable());
+                        for(int i = 1; i <= metaData.getColumnCount() ; i++) {
+                            if (indexInList(i - 1, attrLibres)) {
+                                num_null++;
+                                add.add("(" + String.valueOf(num_null) + ", NULL)");
+                            } else 
+                                add.add(T.getObject(i));
+                        }
+                        toAdd.add(add);
+                    }
+                }
+            }
+            for(ArrayList<Object> values : toAdd)
+                insertReq(db, null, null, null, null, values);
             return ret;
         } catch (SQLException e){
             e.printStackTrace();
@@ -382,7 +480,7 @@ public class TGD extends Contrainte {
      * @return La requête de vérification
      * @throws SQLException
      */
-    private ResultSet VerifReq(Database db, Relation r2, ResultSet T, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+    private ResultSet verifReq(Database db, Relation r2, ResultSet T, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
         ArrayList<String> attr = new ArrayList<>();
         ArrayList<Object> values = new ArrayList<>();
 
@@ -395,7 +493,7 @@ public class TGD extends Contrainte {
             }
         }
 
-        return db.SelectQuery(r2.getNomTable(), attr, values);
+        return db.selectQuery(r2.getNomTable(), attr, values);
     }
 
     /**
@@ -432,26 +530,36 @@ public class TGD extends Contrainte {
      * 
      * @throws SQLException
      */
-    private void InsertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
-        String req = "INSERT INTO " + r.getNomTable() + " VALUES (";
+    private void insertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres, ArrayList<Object> values) throws SQLException{
+        String req = "INSERT INTO "; 
+        if(values == null) {
+            req += r.getNomTable() + " VALUES (";
+        
+            values = new ArrayList<>();
+            int jlies = 0;
 
-        int jlies = 0;
-
-        ArrayList<Object> l = new ArrayList<>();
-        for(int i = 0; i < r.getMembres().size(); i++) {
-            if(indexInList(i, attrLibres)) {
-                num_null++;
-                req += "(" + String.valueOf(num_null) + ", NULL), ";
-            } else {
-                req += "?, "; //T.getObject(attrLies.get(jlies) + 1) + ", ";
-                l.add(T.getObject(attrLies.get(jlies) + 1));
-                jlies++;
+            for(int i = 0; i < r.getMembres().size(); i++) {
+                if(indexInList(i, attrLibres)) {
+                    num_null++;
+                    req += "(" + String.valueOf(num_null) + ", NULL), ";
+                } else {
+                    req += "?, "; //T.getObject(attrLies.get(jlies) + 1) + ", ";
+                    values.add(T.getObject(attrLies.get(jlies) + 1));
+                    jlies++;
+                }
             }
+        } 
+        else {
+            req += values.get(0) + " VALUES (";
+            for(int i = 1; i < values.size(); i++)
+                req += "?, ";
         }
-
+        
         req = req.substring(0, req.length() - 2) + ")";
-        db.InsertReq(req, l);
+        db.insertReq(req, values);
     }
+
+
 
     private boolean indexInList(int i, ArrayList<Integer> L){
         for(Integer index : L)

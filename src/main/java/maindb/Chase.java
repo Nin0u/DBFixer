@@ -3,6 +3,7 @@ package maindb;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 
 import contrainte.*;
@@ -39,7 +40,7 @@ public class Chase {
                 break;
 
             case CORE : 
-                System.out.println("Pas encore implémenté");
+                coreChase(db, sigma);
                 break;
         }
     }
@@ -146,5 +147,56 @@ public class Chase {
                 System.out.println();
             }
         }
+    }
+
+    // Core chase
+    private static void coreChase(Database db, ArrayList<Contrainte> sigma) throws SQLException{
+        boolean end = false;
+        while(! end) {
+            end = true;
+            for(Contrainte c : sigma) {
+                System.out.println("DEBUT REPAIR");
+                c.repairType(db);
+                System.out.println("FIN REPAIR");
+                int ret = 0;
+
+                // Pour chaque contrainte on doit faire l'union des tuples à ajouter
+                HashSet<ArrayList<Object>> toAdd = new  HashSet<ArrayList<Object>>();
+
+                if(c instanceof EGD) {
+                    while(true) {
+                        ret = c.action(c.executeCorps(db), db);
+
+                        if(ret == -1) return;
+                        if(ret == 1) end = false;
+                        if(ret == 0) break;
+                    }
+                } else {
+                    ret = c.actionCore(c.executeCorps(db), db, toAdd);
+                    if(ret == -1) return;
+                    if(ret == 1) end = false;
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    /**
+     * Trouve le core
+     * 
+     * @param db La base de données
+     * @param sigma L'ensemble des contraintes
+     * @throws SQLException
+     */
+    private static void findCore(Database db, ArrayList<Contrainte> sigma) throws SQLException{
+        // On récupère chaque tuple de D
+
+        // Pour chaque tuple de D
+        
+        // On retire le tuple qu'on stocke dans t
+
+        // Si D satisfait sigma on retire définitivement t
+
+        // Sinon on rajoute t
     }
 }

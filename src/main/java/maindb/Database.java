@@ -74,7 +74,7 @@ public class Database {
         return res;
     }
 
-    public int UpdateQuery(String nomTable, String attr, Object o, ArrayList<String> attrs, ArrayList<Object> values) {
+    public int updateQuery(String nomTable, String attr, Object o, ArrayList<String> attrs, ArrayList<Object> values) {
         int res = 0;
 
         String sql = "UPDATE " + nomTable + " SET " + attr + " = ? WHERE ";
@@ -98,7 +98,7 @@ public class Database {
         return res;
     }
 
-    public ResultSet SelectQuery(String nomtable, ArrayList<String> attrs, ArrayList<Object> values) {
+    public ResultSet selectQuery(String nomtable, ArrayList<String> attrs, ArrayList<Object> values) {
         ResultSet res = null;
 
         String sql = "SELECT * FROM " + nomtable;
@@ -149,7 +149,7 @@ public class Database {
         return res;
     }
 
-    public void ChangeType(String nomTable, String type, String attr) {
+    public void changeType(String nomTable, String type, String attr) {
         String req = "ALTER TABLE " + nomTable + 
         " ALTER COLUMN " + attr + " TYPE " + type +
         " USING " + attr + "::" + type;
@@ -163,7 +163,7 @@ public class Database {
         }
     }
 
-    public int InsertReq(String sql, ArrayList<Object> l) {
+    public int insertReq(String sql, ArrayList<Object> l) {
         int res = 0;
 
         try {

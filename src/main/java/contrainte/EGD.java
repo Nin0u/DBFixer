@@ -5,6 +5,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import atome.*;
 import maindb.Database;
@@ -156,6 +157,11 @@ public class EGD extends Contrainte {
         return action(req, db);
     }
 
+    // TODO : à adapter ?
+    public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException {
+        return action(req, db);
+    }
+
     private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
         System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
         
@@ -172,7 +178,7 @@ public class EGD extends Contrainte {
             values.add(T.getObject(j + 1));
         }
 
-        db.UpdateQuery(ordRelations.get(ri).getNomTable(), rsmd.getColumnLabel(ri + 1),  T.getObject(li + 1), attrs, values);
+        db.updateQuery(ordRelations.get(ri).getNomTable(), rsmd.getColumnLabel(ri + 1),  T.getObject(li + 1), attrs, values);
     }
 
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {

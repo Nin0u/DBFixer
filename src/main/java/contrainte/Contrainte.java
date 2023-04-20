@@ -4,6 +4,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import atome.*;
 import maindb.Database;
@@ -178,7 +179,7 @@ public abstract class Contrainte {
             String type = mapTableData.get(table).getColumnTypeName(pair.b);
 
             if(!type.startsWith("null")) {
-                db.ChangeType(table, nomType, mapTableData.get(table).getColumnLabel(pair.b));
+                db.changeType(table, nomType, mapTableData.get(table).getColumnLabel(pair.b));
                 mapTableData.put(table, db.getMetaData(table));
             }
         }
@@ -190,17 +191,16 @@ public abstract class Contrainte {
      */
     public abstract int action(String req, Database db) throws SQLException;
 
-    /**
-     * Méthode abstraite pour la oblivious chase.
-     */
+    /** Méthode abstraite pour la oblivious chase. */
     public abstract int actionOblivious(String req, Database db) throws SQLException;
 
-    /**
-     * Méthode abstraite pour la oblivious chase.
-     */
-    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> null_generes) throws SQLException;
+    /** Méthode abstraite pour la oblivious skolem chase. */
+    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> nullGeneres) throws SQLException;
 
-    /** Méthode d'affichage */
+    /** Méthode abstraite pour la core chase. */
+    public abstract int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException;
+
+    /** Méthode abstraite d'affichage */
     public abstract void affiche();
 
     public class Pair {
