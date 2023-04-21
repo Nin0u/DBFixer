@@ -198,6 +198,7 @@ public class TGD extends Contrainte {
      * 
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
+    @Override
     public int actionOblivious(String req, Database db) throws SQLException {
         try {
             // Valeur de retour
@@ -283,6 +284,7 @@ public class TGD extends Contrainte {
      * 
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
+    @Override
     public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> nullGeneres) throws SQLException{
         try {
             // Valeur de retour
@@ -384,6 +386,7 @@ public class TGD extends Contrainte {
      * 
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
+    @Override
     public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException {
         try {
             // Valeur de retour

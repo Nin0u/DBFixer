@@ -191,17 +191,17 @@ public abstract class Contrainte {
      */
     public abstract int action(String req, Database db) throws SQLException;
 
-    /** Méthode abstraite pour la oblivious chase. */
-    public abstract int actionOblivious(String req, Database db) throws SQLException;
+    /** Méthode  pour la oblivious chase. */
+    public int actionOblivious(String req, Database db) throws SQLException { return action(req, db); }
 
-    /** Méthode abstraite pour la oblivious skolem chase. */
-    public abstract int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> nullGeneres) throws SQLException;
+    /** Méthode pour la oblivious skolem chase. */
+    public int actionSkolem(String req, Database db, HashMap<ArrayList<String>, Integer> nullGeneres) throws SQLException { return action(req, db); }
 
-    /** Méthode abstraite pour la core chase. */
-    public abstract int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException;
+    /** Méthode pour la core chase. */
+    public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException { return action(req, db); }
 
-    /** Méthode abstraite pour vérifier qu'une DB satifait des contraintes */
-    public abstract boolean actionSatisfy(String res, Database db)  throws SQLException;
+    /** Méthode pour vérifier qu'une DB satifait des contraintes */
+    public abstract boolean actionSatisfy(String req, Database db)  throws SQLException;
 
     /** Méthode abstraite d'affichage */
     public abstract void affiche();
