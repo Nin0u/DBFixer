@@ -177,7 +177,7 @@ public class TGD extends Contrainte {
                         }
 
                         // On insère le tuple
-                        insertReq(db, r2, T, attrLies, attrLibres, null);
+                        insertReq(db, r2, T, attrLies, attrLibres);
                     }
 
                 }
@@ -262,7 +262,7 @@ public class TGD extends Contrainte {
                     }
 
                     // On insère le tuple
-                    insertReq(db, r2, T, attrLies, attrLibres, null);
+                    insertReq(db, r2, T, attrLies, attrLibres);
 
                 }
             }
@@ -361,7 +361,7 @@ public class TGD extends Contrainte {
                     }
 
                     // On insère le tuple et on ajoute le tupe dans null_generes
-                    insertReq(db, r2, T, attrLies, attrLibres, null);
+                    insertReq(db, r2, T, attrLies, attrLibres);
                     nullGeneres.put(valeursLiees, num_null);
                 }
             }
@@ -463,7 +463,7 @@ public class TGD extends Contrainte {
                     }
                 }
             }
-            
+
             return ret;
         } catch (SQLException e){
             e.printStackTrace();
@@ -598,29 +598,20 @@ public class TGD extends Contrainte {
      * 
      * @throws SQLException
      */
-    private void insertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres, ArrayList<Object> values) throws SQLException{
-        String req = "INSERT INTO "; 
-        if(values == null) {
-            req += r.getNomTable() + " VALUES (";
-            values = new ArrayList<Object>();
-            int jlies = 0;
+    private void insertReq(Database db, Relation r, ResultSet T, ArrayList<Integer> attrLies, ArrayList<Integer> attrLibres) throws SQLException{
+        String req = "INSERT INTO " + r.getNomTable() + " VALUES (";
+        ArrayList<Object> values = new ArrayList<Object>();
+        int jlies = 0;
 
-            for(int i = 0; i < r.getMembres().size(); i++) {
-                if(indexInList(i, attrLibres)) {
-                    num_null++;
-                    req += "(" + String.valueOf(num_null) + ", NULL), ";
-                } else {
-                    req += "?, "; //T.getObject(attrLies.get(jlies) + 1) + ", ";
-                    values.add(T.getObject(attrLies.get(jlies) + 1));
-                    jlies++;
-                }
+        for(int i = 0; i < r.getMembres().size(); i++) {
+            if(indexInList(i, attrLibres)) {
+                num_null++;
+                req += "(" + String.valueOf(num_null) + ", NULL), ";
+            } else {
+                req += "?, "; //T.getObject(attrLies.get(jlies) + 1) + ", ";
+                values.add(T.getObject(attrLies.get(jlies) + 1));
+                jlies++;
             }
-        } 
-        else {
-            req += values.get(0) + " VALUES (";
-            for(int i = 1; i < values.size(); i++)
-                req += "?, ";
-            values.remove(0);
         }
         
         req = req.substring(0, req.length() - 2) + ")";
