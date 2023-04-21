@@ -157,14 +157,15 @@ public class Chase {
         boolean end = false;
         while(! end) {
             end = true;
+
+            // Pour chaque contrainte on doit faire l'union des tuples à ajouter
+            HashSet<ArrayList<Object>> toAdd = new  HashSet<ArrayList<Object>>();
+
             for(Contrainte c : sigma) {
                 System.out.println("DEBUT REPAIR");
                 c.repairType(db);
                 System.out.println("FIN REPAIR");
                 int ret = 0;
-
-                // Pour chaque contrainte on doit faire l'union des tuples à ajouter
-                HashSet<ArrayList<Object>> toAdd = new  HashSet<ArrayList<Object>>();
 
                 if(c instanceof EGD) {
                     while(true) {
@@ -177,13 +178,28 @@ public class Chase {
                 } else {
                     ret = c.actionCore(c.executeCorps(db), db, toAdd);
                     if(ret == -1) return;
-                    if(ret == 1) {
-                        end = false;
-                        findCore(db, sigma, c);
-                    }
+                    if(ret == 1) end = false;
                 }
                 System.out.println();
             }
+
+            // On ajoute les tuples
+            for (ArrayList<Object> values : toAdd){
+                String req = "INSERT INTO " + values.get(0) + " VALUES (";
+                values.remove(0);
+                for (Object o : values){
+                    if (o.toString().contains("NULL")){
+                        req += o.toString();
+                        values.remove(o);
+                    }
+                    else req += "?,";
+                }
+                req = req.substring(0, req.length() -1) + ")";
+                db.insertReq(req, values);
+            }
+
+            // On trouve le core
+            findCore(db, sigma);
         }
     }
 
@@ -194,52 +210,50 @@ public class Chase {
      * @param sigma L'ensemble des contraintes
      * @throws SQLException
      */
-    private static void findCore(Database db, ArrayList<Contrainte> sigma, Contrainte c) throws SQLException{
+    private static void findCore(Database db, ArrayList<Contrainte> sigma) throws SQLException{
         // On récupère chaque tuple de D
         // Pour cela on va récupérer chaque table intervenant dans la tête des contraintes TGD
-        if (c instanceof TGD) {
-            for (Relation r : ((TGD)c).getRelTete()) {
-                // On récupère tous les tuples d'une table de la tete
-                ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable() + ";");
-                // Pour chacun de ces tuples 
-                while (res.next()) {
-                    // On le retire temporairement en stockant ses valeurs en cas de rajout
-                    ArrayList<Object> values = new ArrayList<Object>();
-                    String delete = "DELETE FROM " + r.getNomTable() + "WHERE ";
+        for(Contrainte c : sigma) {
+            if (c instanceof TGD) {
+                for (Relation r : ((TGD)c).getRelTete()) {
+                    // On récupère tous les tuples d'une table de la tete
+                    ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable() + ";");
+                    // Pour chacun de ces tuples 
+                    while (res.next()) {
+                        // On le retire temporairement en stockant ses valeurs en cas de rajout
+                        ArrayList<Object> values = new ArrayList<Object>();
+                        String delete = "DELETE FROM " + r.getNomTable() + "WHERE ";
 
-                    for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
-                        values.add(res.getObject(i));
-                        delete += res.getMetaData().getColumnName(i) + "=? AND"; 
-                    }
-                    delete = delete.substring(0, delete.length() - 4);
-                    db.insertReq(delete, values);
+                        for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
+                            values.add(res.getObject(i));
+                            delete += res.getMetaData().getColumnName(i) + "=? AND"; 
+                        }
+                        delete = delete.substring(0, delete.length() - 4);
+                        db.insertReq(delete, values);
 
-                    // Si D satisfait sigma on retire définitivement notre tuple
-                    if (satisfy(db, sigma)) continue;
+                        // Si D satisfait sigma on retire définitivement notre tuple
+                        if (satisfy(db, sigma)) continue;
 
-                    // Sinon on rajoute le tuple
-                    else {
-                        String insert = "INSERT INTO " + r.getNomTable() + "VALUES ("; 
-                        for (int i = 0; i < values.size(); i++)
-                            insert+= "?, ";
+                        // Sinon on rajoute le tuple
+                        else {
+                            String insert = "INSERT INTO " + r.getNomTable() + "VALUES ("; 
+                            for (int i = 0; i < values.size(); i++)
+                                insert+= "?, ";
 
-                        insert = insert.substring(0, insert.length() - 2) + ")";
-                        db.insertReq(insert, values);
+                            insert = insert.substring(0, insert.length() - 2) + ")";
+                            db.insertReq(insert, values);
+                        }
                     }
                 }
-            }
-        } 
+            } 
+        }
     }
 
     public static boolean satisfy(Database db, ArrayList<Contrainte> sigma) {
         try {
             boolean b = true;
             for(Contrainte c : sigma) {
-                if(c instanceof EGD) {
-                    b = b && c.actionSatisfy(c.executeCorps(db), db);
-                } else {
-                    b = b && c.actionSatisfy(c.executeCorps(db), db);
-                }
+                b = b && c.actionSatisfy(c.executeCorps(db), db);
             }
 
             return b;

@@ -19,7 +19,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP CAST IF EXISTS (%typevar AS NULL_%typevar);
-CREATE CAST(%typevar AS NULL_%typevar) WITH FUNCTION TO_NULL_%typevar(%typevar);
+CREATE CAST(%typevar AS NULL_%typevar) WITH FUNCTION TO_NULL_%typevar(%typevar) AS IMPLICIT;
 
 ALTER TABLE  %nomTable 
 ALTER COLUMN %nomvar TYPE NULL_%typevar 

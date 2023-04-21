@@ -463,8 +463,7 @@ public class TGD extends Contrainte {
                     }
                 }
             }
-            for(ArrayList<Object> values : toAdd)
-                insertReq(db, null, null, null, null, values);
+            
             return ret;
         } catch (SQLException e){
             e.printStackTrace();
