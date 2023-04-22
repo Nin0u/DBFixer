@@ -339,7 +339,7 @@ public class TGD extends Contrainte {
                     // On récupère les valeurs des attributs liés du tuple
                     ArrayList<String> valeursLiees = new ArrayList<String>();
                     for(int i : attrLies)
-                        valeursLiees.add(T.getString(i + 1)); 
+                        valeursLiees.add(T.getString(i + 1));
 
                     // On cherche dans null_generes notre tuple : si notre tuple est dans null_genere on n'insère rien
                     if(nullGeneres.get(valeursLiees) != null)
