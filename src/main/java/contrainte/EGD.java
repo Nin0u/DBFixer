@@ -56,7 +56,6 @@ public class EGD extends Contrainte {
                 i++;
             }
         }
-
         
         if (egTete != null) {
             for(Egalite eg : egTete) {

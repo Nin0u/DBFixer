@@ -10,13 +10,13 @@ public enum ChaseMode {
     protected int i;
     private ChaseMode(int i) { this.i = i;}
 
-    public static ChaseMode getMode(int i){
+    public static ChaseMode getMode(int i) {
         switch(i) {
             case 0 : return STANDARD;
             case 1 : return OBLIVIOUS;
             case 2 : return SKOLEM;
             case 3 : return OBEGD;
-            case 4 : return CORE;   
+            case 4 : return CORE;
             default : return null;
         }
     }

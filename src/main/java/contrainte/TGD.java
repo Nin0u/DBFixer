@@ -336,7 +336,8 @@ public class TGD extends Contrainte {
                     // On essaye directement d'ajouter le tuple : il faut maintenant vérifier si le tuple est présent dans null_generes ou non
 
                     ret = 1;
-                    // On récupère les valeurs des attributs liés du tuple
+                    // On récupère les valeurs des attributs liés du 
+                    // TODO : modifier de manière à ce que (1,2,3) et (1 , (0,2), (0,3)) soient associés au même NULL
                     ArrayList<String> valeursLiees = new ArrayList<String>();
                     for(int i : attrLies)
                         valeursLiees.add(T.getString(i + 1));
