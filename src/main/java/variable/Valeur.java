@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * et une valeur qui dépend du type donc on utilise Object
  */
 public class Valeur {
-    private static String NULL = "NULL";
+    private static String NULL = "null";
 
     private String type;
     private Object valeur;
@@ -70,7 +70,10 @@ public class Valeur {
      * Elles ont le même type au NULL près.
      * Elles ont la même valeur.
      */
+    @Override
     public boolean equals(Object o) {
+        System.out.println("HZY");
+
         if(!(o instanceof Valeur)) return false;
         Valeur v = (Valeur)o;
 
@@ -103,6 +106,16 @@ public class Valeur {
 
     @Override
     public int hashCode() {
-        return this.valeur.hashCode() + this.type.hashCode();
+        int v1 = 0;
+        if(this.type.startsWith(NULL)) {
+            String s = this.valeur.toString();
+            System.out.println("#" + s.substring(3, s.length() - 1));
+            v1 = s.substring(3, s.length() - 1).hashCode();
+        }
+        else {
+            System.out.println("#" + this.valeur.toString());
+            v1 = this.valeur.toString().hashCode();
+        }
+        return v1;
     }
 }
