@@ -427,7 +427,7 @@ public class TGD extends Contrainte {
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
     @Override
-    public int actionCore(String req, Database db, HashSet<ArrayList<Object>> toAdd) throws SQLException {
+    public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException {
         try {
             // Valeur de retour
             int ret = 0;
@@ -495,16 +495,15 @@ public class TGD extends Contrainte {
 
                         // On ajoute notre tuple dans la liste de tuple
                         // Le 1e element sera le nom de la table !
-                        ArrayList<Object> add = new ArrayList<Object>();
-                        add.add(r2.getNomTable());
+                        ArrayList<Valeur> add = new ArrayList<>();
                         for(int i = 1; i <= metaData.getColumnCount(); i++) {
                             if (indexInList(i - 1, attrLibres)) {
                                 num_null++;
-                                add.add("(" + String.valueOf(num_null) + ", NULL)");
+                                add.add(new Valeur("un type", "(" + String.valueOf(num_null) + ", NULL)", true));
                             } 
-                            else add.add(T.getObject(i));
+                            else add.add(new Valeur(rsmd.getColumnTypeName(i), T.getObject(i),false));
                         }
-                        toAdd.add(add);
+                        toAdd.add(new Couple(r2.getNomTable(), add));
                     }
                 }
             }
@@ -513,6 +512,24 @@ public class TGD extends Contrainte {
         } catch (SQLException e){
             e.printStackTrace();
             return -1;
+        }
+    }
+
+    public class Couple {
+        String nom_table;
+        ArrayList<Valeur> list;
+
+        public Couple(String n, ArrayList<Valeur> l) {
+            nom_table = n;
+            list = l;
+        }
+
+        public ArrayList<Valeur> getList() {
+            return list;
+        }
+
+        public String getNomTable() {
+            return nom_table;
         }
     }
 

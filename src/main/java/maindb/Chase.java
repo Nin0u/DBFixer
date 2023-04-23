@@ -1,6 +1,7 @@
 package maindb;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Scanner;
 
 import atome.Relation;
 import contrainte.*;
+import contrainte.TGD.Couple;
 import variable.Valeur;
 
 public class Chase {
@@ -167,7 +169,7 @@ public class Chase {
             end = true;
 
             // Pour chaque contrainte on doit faire l'union des tuples à ajouter
-            HashSet<ArrayList<Object>> toAdd = new  HashSet<ArrayList<Object>>();
+            HashSet<Couple> toAdd = new  HashSet<>();
 
             for(Contrainte c : sigma) {
                 System.out.println("DEBUT REPAIR");
@@ -192,18 +194,15 @@ public class Chase {
             }
 
             // On ajoute les tuples
-            for (ArrayList<Object> values : toAdd){
-                String req = "INSERT INTO " + values.get(0) + " VALUES (";
-                values.remove(0);
-                for (Object o : values){
-                    if (o.toString().contains("NULL")){
-                        req += o.toString();
-                        values.remove(o);
-                    }
-                    else req += "?,";
+            for (Couple c : toAdd){
+                ArrayList<Valeur> val = c.getList();
+                ResultSetMetaData rsmd = db.getMetaData(c.getNomTable());
+                String req = "INSERT INTO " + c.getNomTable() + " VALUES (";
+                for (int i = 0; i < val.size(); i++){
+                    req += val.get(i).addStringReq(rsmd.getColumnTypeName(i + 1)) + ", ";
                 }
-                req = req.substring(0, req.length() -1) + ")";
-                db.insertReq(req, values);
+                req = req.substring(0, req.length() - 2) + ")";
+                db.insertReq(req, val);
             }
 
             // On trouve le core
@@ -225,18 +224,18 @@ public class Chase {
             if (c instanceof TGD) {
                 for (Relation r : ((TGD)c).getRelTete()) {
                     // On récupère tous les tuples d'une table de la tete
-                    ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable() + ";");
+                    ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable());
                     // Pour chacun de ces tuples 
                     while (res.next()) {
                         // On le retire temporairement en stockant ses valeurs en cas de rajout
-                        ArrayList<Object> values = new ArrayList<Object>();
+                        ArrayList<Valeur> values = new ArrayList<Valeur>();
                         String delete = "DELETE FROM " + r.getNomTable() + "WHERE ";
 
                         for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
-                            values.add(res.getObject(i));
-                            delete += res.getMetaData().getColumnName(i) + "=? AND"; 
+                            values.add(new Valeur(res.getMetaData().getColumnTypeName(i), res.getObject(i), false));
+                            delete += res.getMetaData().getColumnName(i) + " = ? AND "; 
                         }
-                        delete = delete.substring(0, delete.length() - 4);
+                        delete = delete.substring(0, delete.length() - 5);
                         db.insertReq(delete, values);
 
                         // Si D satisfait sigma on retire définitivement notre tuple
