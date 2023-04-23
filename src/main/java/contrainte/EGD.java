@@ -40,7 +40,7 @@ public class EGD extends Contrainte {
         super.repairType(db);
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
         HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
-
+        
         // On constuit nos structures
         for(Relation rel : rlCorps) {
             if(mapTableData.get(rel.getNomTable()) == null) {
@@ -65,6 +65,8 @@ public class EGD extends Contrainte {
                 
                 String table1 = p1.a.getNomTable();
                 String table2 = p2.a.getNomTable();
+
+                System.out.println(table1 + " " + table2);
 
                 if(mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null")) {
                     changeType(db, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(p1.b));

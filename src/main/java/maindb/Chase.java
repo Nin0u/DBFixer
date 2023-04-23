@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import atome.Relation;
 import contrainte.*;
+import variable.Valeur;
 
 public class Chase {
     /** Limite d'un tour d'Oblivious Chase : quand cette limite est atteinte, on demande à l'utilisateur si on veut refaire un tour. */
@@ -123,12 +124,12 @@ public class Chase {
     private static void skolemChase(Database db, ArrayList<Contrainte> sigma) throws SQLException{
         boolean end = false;
 
-        HashMap<Contrainte, HashMap<ArrayList<String>, Integer>> tuples_liees = new HashMap<Contrainte, HashMap<ArrayList<String>, Integer>>();
+        System.out.println("SKOLEM");
+        HashMap<Contrainte, HashMap<ArrayList<Valeur>, Integer>> tuples_liees = new HashMap<Contrainte, HashMap<ArrayList<Valeur>, Integer>>();
         for (Contrainte c : sigma) 
-            tuples_liees.put(c, new HashMap<ArrayList<String>, Integer>());
+            tuples_liees.put(c, new HashMap<ArrayList<Valeur>, Integer>());
         while(! end) {
             end = true;
-
             for(Contrainte c : sigma) {
                 System.out.println("DEBUT REPAIR");
                 c.repairType(db);
@@ -143,12 +144,19 @@ public class Chase {
                         if(ret == 0) break;
                     }
                 } else {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                     ret = c.actionSkolem(c.executeCorps(db), db, tuples_liees.get(c));
                     if(ret == -1) return;
                     if(ret == 1) end = false;
                 }
                 System.out.println();
             }
+
         }
     }
 

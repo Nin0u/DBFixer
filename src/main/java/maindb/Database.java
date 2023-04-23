@@ -3,6 +3,9 @@ package maindb;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import variable.Valeur;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -98,18 +101,11 @@ public class Database {
         return res;
     }
 
-    public ResultSet selectQuery(String nomtable, ArrayList<String> attrs, ArrayList<Object> values) {
+    public ResultSet selectQuery(String sql, ArrayList<Object> values) {
         ResultSet res = null;
-
-        String sql = "SELECT * FROM " + nomtable;
-        if(attrs.size() != 0) 
-            sql += " WHERE ";
-        for(int i = 0; i < attrs.size(); i++)
-            sql += attrs.get(i) + " = ? AND ";
-        sql = sql.substring(0, sql.length() - 5);
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            for(int i = 0; i < attrs.size(); i++) {
+            for(int i = 0; i < values.size(); i++) {
                 stmt.setObject(i + 1, values.get(i));
             }
             System.out.println(stmt);
@@ -163,13 +159,14 @@ public class Database {
         }
     }
 
-    public int insertReq(String sql, ArrayList<Object> l) {
+    public int insertReq(String sql, ArrayList<Valeur> l) {
         int res = 0;
 
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
+            int j = 1;
             for(int i = 0; i < l.size(); i++) {
-                pstmt.setObject(i + 1, l.get(i));
+                if(l.get(i).addPreparedStatementReq(pstmt, j)) j++;
             }
             System.out.println(pstmt);
             res = pstmt.executeUpdate();

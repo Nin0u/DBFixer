@@ -43,4 +43,9 @@ public class Attribut{
         Attribut a = (Attribut)o;
         return (a.nom.equals(this.nom)) && (a.indice == this.indice);
     }
+
+    @Override
+    public int hashCode() {
+        return nom.hashCode() + indice * 1000;
+    }
 }

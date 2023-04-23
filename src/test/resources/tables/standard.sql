@@ -19,4 +19,5 @@ CREATE TABLE Q (
 );
 
 INSERT INTO R VALUES
-('11', '22');
+('11', '22'),
+('22', '33');
