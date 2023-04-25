@@ -1,4 +1,4 @@
 3
 Vote(x1, y1, z1) -> Scrutin(y1, dd1, d1) ^ Personne(n1, p1, dn1, x1)
-Scrutin(n1, dd1, d1) ^ Scrutin(n2, dd2, df2) ^ (n1 = n2) -> (dd1 = dd2) ^ (df1 = df2)
-Vote(nss1, ns1, r1) ^ Vote(nss2, ns, r2) ^ (nss1 = nss2) ^ (ns1 = ns2) -> (r1 = r2) 
+Scrutin(n1, dd1, df1) ^ Scrutin(n2, dd2, df2) ^ (n1 = n2) -> (dd1 = dd2) ^ (df1 = df2)
+Vote(nss1, ns1, r1) ^ Vote(nss2, ns2, r2) ^ (nss1 = nss2) ^ (ns1 = ns2) -> (r1 = r2) 

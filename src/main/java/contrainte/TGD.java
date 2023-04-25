@@ -412,16 +412,20 @@ public class TGD extends Contrainte {
                                 System.out.println("Create Type null_" + columnTypeName);
                             }
                         }
-
+                            
                         // On ajoute notre tuple dans la liste de tuple
                         // Le 1e element sera le nom de la table !
+                        int jlies = 0;
                         ArrayList<Valeur> add = new ArrayList<>();
-                        for(int i = 1; i <= metaData.getColumnCount(); i++) {
-                            if (indexInList(i - 1, attrLibres)) {
+                        for(int i = 0; i < metaData.getColumnCount(); i++) {
+                            if (indexInList(i, attrLibres)) {
                                 num_null++;
                                 add.add(new Valeur("un type", "(" + String.valueOf(num_null) + ", NULL)", true));
                             } 
-                            else add.add(new Valeur(rsmd.getColumnTypeName(i), T.getObject(i),false));
+                            else {
+                                add.add(new Valeur(metaData.getColumnTypeName(attrLies.get(jlies) + 1), T.getObject(attrLies.get(jlies) + 1),false));
+                                jlies++;
+                            }
                         }
                         toAdd.add(new Couple(r2.getNomTable(), add));
                     }
