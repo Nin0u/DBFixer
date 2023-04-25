@@ -16,6 +16,7 @@ import java.util.HashSet;
 
 import atome.*;
 import variable.*;
+import maindb.ChaseMode;
 import maindb.Database;
 
 /**
@@ -35,6 +36,9 @@ public class TGD extends Contrainte {
 
     /** Liste contenant les relations de la tete. */
     private ArrayList<Relation> rlTete;
+
+    /** Map des nulls générés. Sert pour Skolem. */
+    private HashMap<ArrayList<Valeur>, Integer> nullGeneres;
     
     /** 
      * Constructeur 
@@ -45,6 +49,7 @@ public class TGD extends Contrainte {
     public TGD(ArrayList<Relation> rlCorps, ArrayList<Relation> rlTete){
         super(rlCorps, null);
         this.rlTete = rlTete;
+        nullGeneres = new HashMap<ArrayList<Valeur>, Integer>();
     }
 
     /** Getter */
@@ -196,17 +201,23 @@ public class TGD extends Contrainte {
      * 
      * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
      * @param db La base de donnée
+     * @param mode OBLIVIOUS ou SKOLEM
      * 
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
     @Override
-    public int actionOblivious(String req, Database db) throws SQLException {
+    public int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException {
         try {
             // Valeur de retour
             int ret = 0;
 
+            // Regarde si on ajoute au moins un tuple dans la contrainte
+            boolean tupleAjoute = true;
+            if (mode == ChaseMode.SKOLEM) tupleAjoute = false;
+
             // On récupère les tuples qui respectent le corps
             ResultSet T = db.selectRequest(req);
+            ResultSetMetaData rT = T.getMetaData();
 
             // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
             ArrayList<Attribut> orderAttribut = new ArrayList<>();
@@ -221,6 +232,11 @@ public class TGD extends Contrainte {
                     System.out.print(T.getString(i + 1) + " ");
                 }
                 System.out.println();
+
+                if (mode == ChaseMode.SKOLEM) {
+                    if(!needToAdd(T, rT, db, nullGeneres, orderAttribut))
+                    continue;
+                }
 
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){
@@ -249,6 +265,7 @@ public class TGD extends Contrainte {
         
                     System.out.println("Ajout de tuple");
                     ret = 1;
+                    if (mode == ChaseMode.SKOLEM) tupleAjoute = true;
 
                     // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
                     // Si ce n'est pas le cas on doit alterer la table                        
@@ -268,107 +285,10 @@ public class TGD extends Contrainte {
 
                 }
             }
-
-            return ret;
-        } catch (SQLException e){
-            e.printStackTrace();
-            return -1;
-        }
-    }
-
-    /** 
-     * Génère les NULL en fonction du domaine et de la contrainte
-     * 
-     * @param req La requête qui permet d'obtenir les tuples qui respectent le corps
-     * @param db La base de donnée
-     * @param null_generes Map associant un tuple (liste de String) à un numéro de NULL
-     * 
-     * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
-     */
-    @Override
-    public int actionSkolem(String req, Database db, HashMap<ArrayList<Valeur>, Integer> nullGeneres) throws SQLException{
-        try {
-            // Valeur de retour
-            int ret = 0;
-
-            // On récupère les tuples qui respectent le corps
-            ResultSet T = db.selectRequest(req);
-            ResultSetMetaData rT = T.getMetaData();
-
-            // On peut avoir plusieurs attribut avec le même nom, on a besoin donc de l'ordre dans les attributs du tuple
-            ArrayList<Attribut> orderAttribut = new ArrayList<>();
-            for(Relation rel : rlCorps) {
-                for(Attribut a : rel.getMembres())
-                    orderAttribut.add(a);
-            }
-            
-            // Regarde si on ajoute au moins un tuple dans la contrainte
-            boolean tupleAjoute = false;
-
-            // Pour chaque tuple
-            while(T.next()) {
-                for(int i = 0; i < orderAttribut.size(); i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
-
-                if(!needToAdd(T, rT, db, nullGeneres, orderAttribut))
-                    continue;
-
-
-                // On regarde les relations dans la tête
-                for (Relation r2 : rlTete){
-                    // On construit les variables libres et liées 
-                    ArrayList<Integer> attrLies = new ArrayList<Integer>();
-                    ArrayList<Integer> attrLibres = new ArrayList<Integer>();
-
-                    int j = 0;
-                    for(Attribut a2 : r2.getMembres()) {
-                        boolean find = false;
-                        for(int i = 0; i < orderAttribut.size(); i++) {
-                            if(a2.equals(orderAttribut.get(i))) {
-                                attrLies.add(i);
-                                find = true;
-                                break;
-                            }
-                        }
-                        if(!find) attrLibres.add(j); 
-                        j++;
-                    }
-
-                    ResultSetMetaData metaData = db.getMetaData(r2.getNomTable());
-
-                    // Comme pour Oblivious on ne vérifie pas si un tuple vérifie la contrainte
-                    // On essaye directement d'ajouter le tuple : il faut maintenant vérifier si le tuple est présent dans null_generes ou non
-
-                    ret = 1;
-                    // On récupère les valeurs des attributs liés du 
-
-                    // Sinon on insère un tuple et on l'ajoute dans null_genere
-                    System.out.println("Ajout de tuple");
-                    tupleAjoute = true;
-
-                    // Pour toutes les var libres, on regarde dans les metadonnees si le type commence par NULL_
-                    // Si ce n'est pas le cas on doit alterer la table                 
-                    for(Integer index : attrLibres){
-                        String columnTypeName = metaData.getColumnTypeName(index + 1);
-                        String nom_attr = metaData.getColumnLabel(index + 1);
-                        System.out.println(columnTypeName);
-                        if(!columnTypeName.startsWith("null_")){
-                            String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
-                            db.updateRequest(alterReq);
-                            System.out.println("Create Type null_" + columnTypeName);
-                        }
-                    }
-
-                    // On insère le tuple et on ajoute le tupe dans null_generes
-                    insertReq(db, r2, T, attrLies, attrLibres);
-                }
-            }
-
             // Si on a ajouté aucun tuple on peut stopper la chase
-            if(!tupleAjoute) return 0;
+            if(mode == ChaseMode.SKOLEM  && !tupleAjoute) return 0;
             return ret;
+
         } catch (SQLException e){
             e.printStackTrace();
             return -1;

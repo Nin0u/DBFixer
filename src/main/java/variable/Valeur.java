@@ -49,12 +49,11 @@ public class Valeur {
     }
 
     public String addStringReq(String type) {
-        if(this.new_null) {
+        if(this.new_null)
             return valeur.toString();
-        }
-        if(type.startsWith("null") && !this.type.startsWith("null")) {
+
+        if(type.startsWith("null") && !this.type.startsWith("null"))
             return "to_" + type + "(?)";
-        }
         return "?";
     }
 
@@ -72,50 +71,52 @@ public class Valeur {
      */
     @Override
     public boolean equals(Object o) {
-        System.out.println("HZY");
-
         if(!(o instanceof Valeur)) return false;
         Valeur v = (Valeur)o;
 
-        //if(this.new_null != v.new_null) return false;
         if (this.type.startsWith(NULL) && !v.type.startsWith(NULL)) {
-            String s = this.valeur.toString();
+            String[] s = this.valeur.toString().split(",");
+            s[0] = s[0].substring(1).trim(); 
+            s[1] = s[1].substring(0, s[1].length() - 1).trim();
 
-            System.out.println("# " + this.type.substring(NULL.length() + 1) + " " + (v.type));
-            System.out.println("# " + s.substring(3, s.length() - 1) + " " + v.valeur.toString());
-         
-            return (this.type.substring(NULL.length() + 1).equals(v.type))
-                && s.substring(3, s.length() - 1).equals(v.valeur.toString());
+            // Si le numéro de null est 0 on compare les valeurs
+            if (s[0].equals("0")) {
+                return (this.type.substring(NULL.length() + 1).equals(v.type))
+                && s[1].equals(v.valeur.toString());
+            } 
+
+            else return false;
         }
 
         else if (!this.type.startsWith(NULL) && v.type.startsWith(NULL)) {
-            String s = v.toString();
+            String[] s = v.toString().split(",");
+            s[0] = s[0].substring(1).trim(); 
+            s[1] = s[1].substring(0, s[1].length() - 1).trim();
 
-            System.out.println("= " + v.type.substring(NULL.length() + 1) + " " + (this.type));
-            System.out.println("= " + s.substring(3, s.length() - 1) + " " + this.valeur.toString());
-         
-            return (v.type.substring(NULL.length() + 1).equals(this.type))
-                && s.substring(3, s.length() - 1).equals(this.valeur.toString());
+            // Si le numéro de null est 0 on compare les valeurs
+            if (s[0].equals("0")) {
+                return (this.type.substring(NULL.length() + 1).equals(v.type))
+                && s[1].equals(v.valeur.toString());
+            } 
+            else return false;
         }
 
-        else {
-            return (this.type.equals(v.type)) 
-                && this.valeur.equals(v.valeur);
-        }
+        else
+            return (this.type.equals(v.type)) && this.valeur.equals(v.valeur);
     }
 
     @Override
     public int hashCode() {
         int v1 = 0;
+
         if(this.type.startsWith(NULL)) {
-            String s = this.valeur.toString();
-            System.out.println("#" + s.substring(3, s.length() - 1));
-            v1 = s.substring(3, s.length() - 1).hashCode();
+            String[] s = this.valeur.toString().split(",");
+            s[0] = s[0].substring(1).trim(); 
+            s[1] = s[1].substring(0, s[1].length() - 1).trim();
+            v1 = s[1].hashCode();
         }
-        else {
-            System.out.println("#" + this.valeur.toString());
-            v1 = this.valeur.toString().hashCode();
-        }
+        else v1 = this.valeur.toString().hashCode();
+
         return v1;
     }
 }

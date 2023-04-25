@@ -9,8 +9,8 @@ import java.util.HashSet;
 import atome.*;
 import contrainte.TGD.Couple;
 import maindb.Database;
+import maindb.ChaseMode;
 import variable.Attribut;
-import variable.Valeur;
 
 /** Super classe pour les EGD et TGD */
 public abstract class Contrainte {
@@ -193,11 +193,8 @@ public abstract class Contrainte {
      */
     public abstract int action(String req, Database db) throws SQLException;
 
-    /** Méthode  pour la oblivious chase. */
-    public int actionOblivious(String req, Database db) throws SQLException { return action(req, db); }
-
-    /** Méthode pour la oblivious skolem chase. */
-    public int actionSkolem(String req, Database db, HashMap<ArrayList<Valeur>, Integer> nullGeneres) throws SQLException { return action(req, db); }
+    /** Méthode  pour la oblivious ou la skolem chase. */
+    public int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException { return action(req, db); }
 
     /** Méthode pour la core chase. */
     public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException { return action(req, db); }

@@ -5,7 +5,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -100,7 +99,7 @@ public class Chase {
                         if(ret == 0) break;
                     }
                 } else {
-                    ret = c.actionOblivious(c.executeCorps(db), db);
+                    ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.OBLIVIOUS);
                     if(ret == -1) return;
                     if(ret == 1){
                         end = false;
@@ -127,9 +126,6 @@ public class Chase {
         boolean end = false;
 
         System.out.println("SKOLEM");
-        HashMap<Contrainte, HashMap<ArrayList<Valeur>, Integer>> tuples_liees = new HashMap<Contrainte, HashMap<ArrayList<Valeur>, Integer>>();
-        for (Contrainte c : sigma) 
-            tuples_liees.put(c, new HashMap<ArrayList<Valeur>, Integer>());
         while(! end) {
             end = true;
             for(Contrainte c : sigma) {
@@ -146,13 +142,7 @@ public class Chase {
                         if(ret == 0) break;
                     }
                 } else {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    ret = c.actionSkolem(c.executeCorps(db), db, tuples_liees.get(c));
+                    ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.SKOLEM);
                     if(ret == -1) return;
                     if(ret == 1) end = false;
                 }
@@ -229,7 +219,7 @@ public class Chase {
                     while (res.next()) {
                         // On le retire temporairement en stockant ses valeurs en cas de rajout
                         ArrayList<Valeur> values = new ArrayList<Valeur>();
-                        String delete = "DELETE FROM " + r.getNomTable() + "WHERE ";
+                        String delete = "DELETE FROM " + r.getNomTable() + " WHERE ";
 
                         for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
                             values.add(new Valeur(res.getMetaData().getColumnTypeName(i), res.getObject(i), false));
@@ -243,7 +233,7 @@ public class Chase {
 
                         // Sinon on rajoute le tuple
                         else {
-                            String insert = "INSERT INTO " + r.getNomTable() + "VALUES ("; 
+                            String insert = "INSERT INTO " + r.getNomTable() + " VALUES ("; 
                             for (int i = 0; i < values.size(); i++)
                                 insert+= "?, ";
 
