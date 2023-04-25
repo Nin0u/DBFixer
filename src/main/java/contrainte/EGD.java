@@ -146,10 +146,57 @@ public class EGD extends Contrainte {
             return -1;
         }
     }
-
-    // TODO : S'il faut égaliser alors renvoyer faux
+    
     public boolean actionSatisfy(String req, Database db) throws SQLException {
-        return true;
+        int nb = 0;
+
+        ResultSet T = db.selectRequest(req);
+
+        ArrayList<Attribut> orderAttribut = new ArrayList<>();
+
+        ArrayList<Relation> ordRelations = new ArrayList<>();
+        ArrayList<Integer> cut = new ArrayList<>();
+        cut.add(0);
+
+        for(Relation rel : rlCorps) {
+            for(Attribut a : rel.getMembres()) {
+                orderAttribut.add(a);
+                ordRelations.add(rel);
+                nb++;
+            }
+            cut.add(nb);
+        }
+        
+        try {
+            while(T.next()) {
+                for(int i = 0; i < nb; i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                for(Egalite eg : egTete) {
+                    Attribut [] attr = eg.getMembres();
+                    ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
+                    ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
+
+                    if(indexLeft.size() == 0 || indexRight.size() == 0) {
+                        System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
+                        return true;
+                    }
+                    for(int li : indexLeft) {
+                        for(int ri : indexRight) {
+                            if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
+        }
     }
 
     private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
