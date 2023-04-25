@@ -42,7 +42,7 @@ public abstract class Contrainte {
     }
 
     public String executeCorps(Database db) throws SQLException {
-        String select = "SELECT * ";
+        String select = "SELECT *";
         String from = "FROM ";
         String where = "WHERE ";
 
@@ -114,7 +114,7 @@ public abstract class Contrainte {
             req += " " + where;
         }
 
-        System.out.println(req);
+        System.out.println("Execution du Corps : " + req);
         return req;
     }
 

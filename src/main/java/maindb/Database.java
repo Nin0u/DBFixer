@@ -133,9 +133,7 @@ public class Database {
     public ResultSetMetaData getMetaData(String nomTable) {
         ResultSetMetaData res = null;
         try {
-            //System.out.println(nomTable);
             String SQL = "select * from " + nomTable + " where 1<0";
-           // System.out.println(SQL);
             PreparedStatement pstmt = conn.prepareStatement(SQL);
             ResultSet r = pstmt.executeQuery();
             res = r.getMetaData();

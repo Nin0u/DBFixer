@@ -66,8 +66,6 @@ public class EGD extends Contrainte {
                 String table1 = p1.a.getNomTable();
                 String table2 = p2.a.getNomTable();
 
-                System.out.println(table1 + " " + table2);
-
                 if(mapTableData.get(table1).getColumnTypeName(p1.b).startsWith("null") && !mapTableData.get(table2).getColumnTypeName(p2.b).startsWith("null")) {
                     changeType(db, mapAttrTable.get(attr[1]), mapTableData, mapTableData.get(table1).getColumnTypeName(p1.b));
                 }
@@ -200,12 +198,8 @@ public class EGD extends Contrainte {
     }
 
     private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
-        System.out.println(T.getString(li + 1) + " " + T.getString(ri + 1));
-        
         int min = getMin(cut, ri);
         int max = getMax(cut, ri);
-        System.out.println(min);
-        System.out.println(max);
 
         ArrayList<String> attrs = new ArrayList<>();
         ArrayList<Object> values = new ArrayList<>();

@@ -29,25 +29,32 @@ public class Chase {
     public static void chase(ChaseMode mode, Database db, ArrayList<Contrainte> sigma) throws SQLException{
         switch(mode){
             case STANDARD :
+                System.out.println("========= Execution de la Standard Chase =========");
                 standardChase(db, sigma); 
                 break;
 
             case OBLIVIOUS :
+                System.out.println("======== Execution de la Oblivious Chase =========");
                 obliviousChase(db, sigma);
                 break;
 
             case SKOLEM : 
+                System.out.println("========== Execution de la Skolem Chase ==========");
                 skolemChase(db, sigma);
                 break;
 
             case OBEGD : 
+                System.out.println("==== Execution de la oblivious Chase avec EGD ====");
                 System.out.println("Pas encore implémenté");
                 break;
 
             case CORE : 
+                System.out.println("=========== Execution de la Core Chase ===========");
                 coreChase(db, sigma);
                 break;
         }
+
+        System.out.println("===================== FIN  ========================");
     }
 
     // Standard chase
@@ -56,9 +63,10 @@ public class Chase {
         while(! end) {
             end = true;
             for(Contrainte c : sigma) {
-                System.out.println("DEBUT REPAIR");
+                System.out.print("Réparation des types ...");
                 c.repairType(db);
-                System.out.println("FIN REPAIR");
+                System.out.println("Fait");
+
                 int ret = 0;
                 if(c instanceof EGD) {
                     while(true) {
@@ -86,9 +94,10 @@ public class Chase {
         while(! end && limit < OBLIVIOUS_LIMIT) {
             end = true;
             for(Contrainte c : sigma) {
-                System.out.println("DEBUT REPAIR");
+                System.out.print("Réparation des types ...");
                 c.repairType(db);
-                System.out.println("FIN REPAIR");
+                System.out.println("Fait");
+
                 int ret = 0;
                 if(c instanceof EGD) {
                     while(true) {
@@ -124,14 +133,13 @@ public class Chase {
     // Oblivious Skolem chase
     private static void skolemChase(Database db, ArrayList<Contrainte> sigma) throws SQLException{
         boolean end = false;
-
-        System.out.println("SKOLEM");
         while(! end) {
             end = true;
             for(Contrainte c : sigma) {
-                System.out.println("DEBUT REPAIR");
+                System.out.print("Réparation des types ...");
                 c.repairType(db);
-                System.out.println("FIN REPAIR");
+                System.out.println("Fait");
+
                 int ret = 0;
                 if(c instanceof EGD) {
                     while(true) {
@@ -162,9 +170,10 @@ public class Chase {
             HashSet<Couple> toAdd = new  HashSet<>();
 
             for(Contrainte c : sigma) {
-                System.out.println("DEBUT REPAIR");
+                System.out.print("Réparation des types ...");
                 c.repairType(db);
-                System.out.println("FIN REPAIR");
+                System.out.println("Fait");
+
                 int ret = 0;
 
                 if(c instanceof EGD) {
