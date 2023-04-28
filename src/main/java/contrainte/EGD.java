@@ -9,6 +9,7 @@ import java.util.HashMap;
 import atome.*;
 import maindb.Database;
 import variable.Attribut;
+import variable.Valeur;
 
 /**
  * Equality Generating Dependency :
@@ -86,14 +87,12 @@ public class EGD extends Contrainte {
      */
     public int action(String req, Database db) throws SQLException {
         int nb = 0;
-
+        
         ResultSet T = db.selectRequest(req);
-
+        
         ArrayList<Attribut> orderAttribut = new ArrayList<>();
 
         ArrayList<Relation> ordRelations = new ArrayList<>();
-        ArrayList<Integer> cut = new ArrayList<>();
-        cut.add(0);
 
         for(Relation rel : rlCorps) {
             for(Attribut a : rel.getMembres()) {
@@ -101,17 +100,17 @@ public class EGD extends Contrainte {
                 ordRelations.add(rel);
                 nb++;
             }
-            cut.add(nb);
         }
         
         try {
-            ResultSetMetaData rsmd = T.getMetaData();
             boolean end = false; // TODO Sert à r ? 
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");
                 }
                 System.out.println();
+
+                HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
 
                 for(Egalite eg : egTete) {
                     Attribut [] attr = eg.getMembres();
@@ -125,18 +124,28 @@ public class EGD extends Contrainte {
                     for(int li : indexLeft) {
                         for(int ri : indexRight) {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
-                                if(!T.getString(li + 1).endsWith(",)"))
-                                    updateDBBIS(T, li, ri, db, rsmd, orderAttribut, cut, ordRelations);
-                                else
-                                    updateDBBIS(T, ri, li, db, rsmd, orderAttribut, cut, ordRelations);
-                                end = true;
-                                return 1;             
+                                if(!T.getString(li + 1).endsWith(",)")) {
+                                    ArrayList<Two> l = tuples.get(ordRelations.get(ri));
+                                    if(l == null) l = new ArrayList<>();
+                                    l.add(new Two(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
+                                    tuples.put(ordRelations.get(ri), l);
+                                }
+                                else {
+                                    ArrayList<Two> l = tuples.get(ordRelations.get(li));
+                                    if(l == null) l = new ArrayList<>();
+                                    l.add(new Two(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
+                                    tuples.put(ordRelations.get(li), l);
+                                }
+                                end = true;          
                             }
                         }
                     }
                 }
 
-                if(end) return 1;
+                if(end) {
+                    updateBD(db, tuples, T, ordRelations);
+                    return 1;
+                }
             }
             return 0;
         } catch (SQLException e) {
@@ -144,6 +153,8 @@ public class EGD extends Contrainte {
             return -1;
         }
     }
+
+
     
     public boolean actionSatisfy(String req, Database db) throws SQLException {
         int nb = 0;
@@ -212,6 +223,45 @@ public class EGD extends Contrainte {
         db.updateQuery(ordRelations.get(ri).getNomTable(), rsmd.getColumnLabel(ri + 1),  T.getObject(li + 1), attrs, values);
     }
 
+    private void updateBD(Database db, HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations) throws SQLException {
+        int min = -1, max = -1;
+
+        for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
+            Relation r = entry.getKey();
+            for(int i = 0; i < ordRelations.size(); i++) {
+                if(ordRelations.get(i) == (r) && min == -1) min = i;
+                if(ordRelations.get(i) != (r) && min != -1 && max == -1) max = i;
+                
+            }
+            if(max == -1) max = ordRelations.size();
+
+            ArrayList<Valeur> val = new ArrayList<>();
+            String req = "UPDATE " + r.getNomTable() + " SET ";
+
+            for(Two two : entry.getValue()) {
+                req += two.attr + " = ?, ";
+                val.add(two.val);
+            }
+
+            System.out.println(min);
+            System.out.println(max);
+
+            req = req.substring(0, req.length() - 2);
+
+            req += " WHERE ";
+
+            for(int i = min; i < max; i++) {
+                val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
+                req += T.getMetaData().getColumnName(i + 1) + " = ? AND ";
+            }
+
+            req = req.substring(0, req.length() - 5);
+            System.out.println(req);
+            db.insertReq(req, val);
+        }
+
+    }
+
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {
         ArrayList<Integer> l = new ArrayList<>();
         int index = 0;
@@ -256,5 +306,15 @@ public class EGD extends Contrainte {
             e.affiche(); 
 
         System.out.println("=========== FIN EGD ==============");
+    }
+
+    public class Two {
+        String attr;
+        Valeur val;
+
+        public Two(String attr, Valeur val) {
+            this.attr = attr;
+            this.val = val;
+        }
     }
 }
