@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import atome.*;
+import maindb.Chase;
+import maindb.ChaseMode;
 import maindb.Database;
 import variable.Attribut;
 import variable.Valeur;
@@ -20,6 +22,10 @@ public class EGD extends Contrainte {
     /** Liste des égalités dans la tête. */
     private ArrayList<Egalite> egTete;
 
+    /** Pour le Oblivious et Skloem */
+    private ArrayList<Paire> egalite;
+    private ArrayList<ArrayList<Valeur>> nullGeneres;
+
     /** 
      * Constructeur 
      * 
@@ -30,6 +36,8 @@ public class EGD extends Contrainte {
     public EGD(ArrayList<Relation> rlCorps, ArrayList<Egalite> egCorps, ArrayList<Egalite> egTete){
         super(rlCorps, egCorps);
         this.egTete = egTete;
+        egalite = new ArrayList<>();
+        nullGeneres = new ArrayList<>();
     }
 
     /** Getter */
@@ -103,7 +111,7 @@ public class EGD extends Contrainte {
         }
         
         try {
-            boolean end = false; // TODO Sert à r ? 
+            boolean end = false; 
             while(T.next()) {
                 for(int i = 0; i < nb; i++) {
                     System.out.print(T.getString(i + 1) + " ");
@@ -154,6 +162,128 @@ public class EGD extends Contrainte {
         }
     }
 
+
+    /** 
+     * Egaliser les tuples de T en accord avec la contrainte this
+     * 
+     * @param req la requête permettant d'obtenir les tuples qui respecte le corps mais pas la tête d'une DF
+     * @param db la base de donnée
+     */
+    public int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException {
+        int nb = 0;
+        
+        ResultSet T = db.selectRequest(req);
+        
+        ArrayList<Attribut> orderAttribut = new ArrayList<>();
+
+        ArrayList<Relation> ordRelations = new ArrayList<>();
+
+        for(Relation rel : rlCorps) {
+            for(Attribut a : rel.getMembres()) {
+                orderAttribut.add(a);
+                ordRelations.add(rel);
+                nb++;
+            }
+        }
+        
+        try {
+            boolean end = false; 
+            while(T.next()) {
+                for(int i = 0; i < nb; i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                if(mode == ChaseMode.SKOLEM && !needToAdd(T, orderAttribut))
+                    continue;
+
+                for(Egalite eg : egTete) {
+                    Attribut [] attr = eg.getMembres();
+                    ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
+                    ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
+
+                    if(indexLeft.size() == 0 || indexRight.size() == 0) {
+                        System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
+                        return -1;
+                    }
+                    for(int li : indexLeft) {
+                        for(int ri : indexRight) {
+                            if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+                                if(T.getString(li + 1).endsWith(",)")) {
+                                    egalite.add(
+                                        new Paire(
+                                            new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1),false),
+                                            new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1),false)
+                                        )
+                                    );
+                                    end = true;          
+                                } else if(T.getString(ri + 1).endsWith(",)")) {
+                                    egalite.add(
+                                        new Paire(
+                                            new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1),false),
+                                            new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1),false)
+                                        )
+                                    );
+                                    end = true;    
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(end) return 1;
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    
+    public boolean needToAdd(ResultSet T, ArrayList<Attribut> orderAttribut) throws SQLException {
+        ArrayList<Valeur> valeurs = new ArrayList<>();
+        for(Egalite eg : egTete) {
+            Attribut [] attr = eg.getMembres();
+            ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
+            ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
+            if(indexLeft.size() == 0 || indexRight.size() == 0) {
+                System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
+                return false;
+            }
+
+            for(int li : indexLeft) {
+                valeurs.add(new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false));
+            }
+            for(int ri : indexRight) {
+                valeurs.add(new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false));
+            }
+        }
+
+        if(nullGeneres.contains(valeurs)) return false;
+        nullGeneres.add(valeurs);
+        return true;
+    }
+
+    public void egalise(Database db) throws SQLException {
+        for(Relation r : rlCorps) {
+            ResultSet T = db.selectRequest("SELECT * FROM " + r.getNomTable());
+            while(T.next()) {
+                for(int i = 1; i < T.getMetaData().getColumnCount(); i++) {
+                    for(Paire p : egalite) {
+                        if(p.v1.getValeur().equals(T.getObject(i))) {
+                            ArrayList<Valeur> val = new ArrayList<>();
+                            val.add(p.v2);
+                            String req = "UPDATE " + r.getNomTable() + " SET " + T.getMetaData().getColumnName(i) + " = ";
+                            req += p.v2.addStringReq(T.getMetaData().getColumnTypeName(i));
+                            req += " WHERE " + T.getMetaData().getColumnName(i) + " = ?";
+                            val.add(p.v1);
+                            db.insertReq(req, val); 
+                        }
+                    }
+                }
+            } 
+        } 
+    }
 
     
     public boolean actionSatisfy(String req, Database db) throws SQLException {
@@ -208,21 +338,6 @@ public class EGD extends Contrainte {
         }
     }
 
-    private void updateDBBIS(ResultSet T, int li, int ri, Database db, ResultSetMetaData rsmd, ArrayList<Attribut> orderAttribut, ArrayList<Integer> cut,  ArrayList<Relation> ordRelations) throws SQLException {
-        int min = getMin(cut, ri);
-        int max = getMax(cut, ri);
-
-        ArrayList<String> attrs = new ArrayList<>();
-        ArrayList<Object> values = new ArrayList<>();
-
-        for(int j = min; j < max; j++) {
-            attrs.add(rsmd.getColumnLabel(j + 1));
-            values.add(T.getObject(j + 1));
-        }
-
-        db.updateQuery(ordRelations.get(ri).getNomTable(), rsmd.getColumnLabel(ri + 1),  T.getObject(li + 1), attrs, values);
-    }
-
     private void updateBD(Database db, HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations) throws SQLException {
         int min = -1, max = -1;
 
@@ -272,25 +387,6 @@ public class EGD extends Contrainte {
         return l;
     }
 
-    private int getMax(ArrayList<Integer> list, int a) {
-        for(int elt : list) {
-            if(a < elt) return elt;
-        }
-        return list.get(list.size() - 1);
-    }
-
-    private int getMin(ArrayList<Integer> list, int a) {
-        int i = 0;
-        for(int elt : list) {
-            if(a < elt) 
-                if(i != 0)
-                    return list.get(i - 1);
-                else return list.get(0);
-            i++;
-        }
-        return list.get(list.size() - 1);
-    }
-
     /** Méthode d'affichage */
     public void affiche(){
         System.out.println("===========  EGD ==============");
@@ -315,6 +411,16 @@ public class EGD extends Contrainte {
         public Two(String attr, Valeur val) {
             this.attr = attr;
             this.val = val;
+        }
+    }
+
+    public class Paire {
+        Valeur v1;
+        Valeur v2;
+
+        public Paire(Valeur v1, Valeur v2) {
+            this.v1 = v1;
+            this.v2 = v2;
         }
     }
 }
