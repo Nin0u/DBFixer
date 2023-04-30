@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS Eleve;
+DROP TABLE IF EXISTS Etu;
 
 CREATE TABLE Eleve(
     nss INTEGER,
@@ -13,3 +14,12 @@ INSERT INTO Eleve VALUES
 (1, 'Nico', 'Ye', 25),
 (1, 'Yico', 'Ne', 52),
 (2, 'Jean', 'TRUC', 1);
+
+CREATE TABLE Etu (
+    id INTEGER,
+    nom NULL_VARCHAR
+);
+
+INSERT INTO Etu VALUES
+(1, (0, 'Alice')),
+(1, (1,NULL));

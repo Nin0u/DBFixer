@@ -99,34 +99,30 @@ public class Chase {
                 System.out.println("Fait");
 
                 int ret = 0;
-                if(c instanceof EGD) {
-                    while(true) {
-                        ret = c.action(c.executeCorps(db), db);
-
-                        if(ret == -1) return;
-                        if(ret == 1) end = false;
-                        if(ret == 0) break;
+                ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.OBLIVIOUS);
+                if(ret == -1) return;
+                if(ret == 1){
+                    end = false;
+                    limit++;
+                    if (limit == OBLIVIOUS_LIMIT){
+                        Scanner sc = new Scanner(System.in);
+                        System.out.println(String.valueOf(OBLIVIOUS_LIMIT) + " itérations effectuées : Voulez-vous continuer ? [y/n]");
+                        String a = sc.nextLine();
+                        sc.close();
+                        a = a.toLowerCase();
+                        if (a.equals("y") || a.equals("o")) limit = 0;
+                        else break;
                     }
-                } else {
-                    ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.OBLIVIOUS);
-                    if(ret == -1) return;
-                    if(ret == 1){
-                        end = false;
-                        limit++;
-                        if (limit == OBLIVIOUS_LIMIT){
-                            Scanner sc = new Scanner(System.in);
-                            System.out.println(String.valueOf(OBLIVIOUS_LIMIT) + " itérations effectuées : Voulez-vous continuer ? [y/n]");
-                            String a = sc.nextLine();
-                            sc.close();
-                            a = a.toLowerCase();
-                            if (a.equals("y") || a.equals("o")) limit = 0;
-                            else break;
-                        }
-                    } 
-                }
+                } 
                 System.out.println();
             }
-
+        }
+        
+        for(Contrainte c : sigma) {
+            if(c instanceof EGD) {
+                EGD e = (EGD)c;
+                e.egalise(db);
+            }
         }
     }
 
@@ -141,22 +137,20 @@ public class Chase {
                 System.out.println("Fait");
 
                 int ret = 0;
-                if(c instanceof EGD) {
-                    while(true) {
-                        ret = c.action(c.executeCorps(db), db);
-
-                        if(ret == -1) return;
-                        if(ret == 1) end = false;
-                        if(ret == 0) break;
-                    }
-                } else {
-                    ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.SKOLEM);
-                    if(ret == -1) return;
-                    if(ret == 1) end = false;
-                }
+                
+                ret = c.actionOblivious(c.executeCorps(db), db, ChaseMode.SKOLEM);
+                if(ret == -1) return;
+                if(ret == 1) end = false;
+                
                 System.out.println();
             }
+        }
 
+        for(Contrainte c : sigma) {
+            if(c instanceof EGD) {
+                EGD e = (EGD)c;
+                e.egalise(db);
+            }
         }
     }
 

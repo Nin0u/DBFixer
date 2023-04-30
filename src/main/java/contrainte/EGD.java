@@ -261,14 +261,27 @@ public class EGD extends Contrainte {
 
         if(nullGeneres.contains(valeurs)) return false;
         nullGeneres.add(valeurs);
+        System.out.println("NULL GENERE");
+        for(int i = 0; i < nullGeneres.size(); i++) {
+            for(int j = 0; j < nullGeneres.get(i).size(); j++) {
+                System.out.print(nullGeneres.get(i).get(j).getValeur().toString() + " ");
+            }
+            System.out.println();
+        }
         return true;
     }
 
     public void egalise(Database db) throws SQLException {
+        System.out.println("EGALISE !");
+        for(Paire p : egalite) {
+            System.out.println(p.v1.getValeur().toString());
+            System.out.println(p.v2.getValeur().toString());
+
+        }
         for(Relation r : rlCorps) {
             ResultSet T = db.selectRequest("SELECT * FROM " + r.getNomTable());
             while(T.next()) {
-                for(int i = 1; i < T.getMetaData().getColumnCount(); i++) {
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
                     for(Paire p : egalite) {
                         if(p.v1.getValeur().equals(T.getObject(i))) {
                             ArrayList<Valeur> val = new ArrayList<>();
