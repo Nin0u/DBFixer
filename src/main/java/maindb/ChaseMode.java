@@ -4,8 +4,7 @@ public enum ChaseMode {
     STANDARD(0),
     OBLIVIOUS(1),
     SKOLEM(2),
-    OBEGD(3),
-    CORE(4);
+    CORE(3);
 
     protected int i;
     private ChaseMode(int i) { this.i = i;}
@@ -15,8 +14,7 @@ public enum ChaseMode {
             case 0 : return STANDARD;
             case 1 : return OBLIVIOUS;
             case 2 : return SKOLEM;
-            case 3 : return OBEGD;
-            case 4 : return CORE;
+            case 3 : return CORE;
             default : return null;
         }
     }

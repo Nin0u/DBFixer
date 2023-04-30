@@ -43,11 +43,6 @@ public class Chase {
                 skolemChase(db, sigma);
                 break;
 
-            case OBEGD : 
-                System.out.println("==== Execution de la oblivious Chase avec EGD ====");
-                System.out.println("Pas encore implémenté");
-                break;
-
             case CORE : 
                 System.out.println("=========== Execution de la Core Chase ===========");
                 coreChase(db, sigma);
