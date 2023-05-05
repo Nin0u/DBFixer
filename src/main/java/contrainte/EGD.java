@@ -5,8 +5,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import atome.*;
+import contrainte.TGD.Couple;
 import maindb.Chase;
 import maindb.ChaseMode;
 import maindb.Database;
@@ -261,7 +263,6 @@ public class EGD extends Contrainte {
 
         if(nullGeneres.contains(valeurs)) return false;
         nullGeneres.add(valeurs);
-        System.out.println("NULL GENERE");
         for(int i = 0; i < nullGeneres.size(); i++) {
             for(int j = 0; j < nullGeneres.get(i).size(); j++) {
                 System.out.print(nullGeneres.get(i).get(j).getValeur().toString() + " ");
@@ -296,6 +297,94 @@ public class EGD extends Contrainte {
                 }
             } 
         } 
+    }
+
+    /** Méthode pour la core chase. */
+    public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException { 
+        int nb = 0;
+        
+        ResultSet T = db.selectRequest(req);
+        
+        ArrayList<Attribut> orderAttribut = new ArrayList<>();
+
+        ArrayList<Relation> ordRelations = new ArrayList<>();
+
+        for(Relation rel : rlCorps) {
+            for(Attribut a : rel.getMembres()) {
+                orderAttribut.add(a);
+                ordRelations.add(rel);
+                nb++;
+            }
+        }
+        
+        try {
+            boolean end = false; 
+            while(T.next()) {
+                for(int i = 0; i < nb; i++) {
+                    System.out.print(T.getString(i + 1) + " ");
+                }
+                System.out.println();
+
+                HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
+
+                for(Egalite eg : egTete) {
+                    Attribut [] attr = eg.getMembres();
+                    ArrayList<Integer> indexLeft = getIndex(orderAttribut, attr[0]);
+                    ArrayList<Integer> indexRight = getIndex(orderAttribut, attr[1]);
+
+                    if(indexLeft.size() == 0 || indexRight.size() == 0) {
+                        System.out.println("IMPOSSIBLE ! Egalité parlant de variables non existants à gauche !");
+                        return -1;
+                    }
+                    for(int li : indexLeft) {
+                        for(int ri : indexRight) {
+                            if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+
+                                //Ceci pour ajouter un après un tuple pour l'égalisation
+                                if(!T.getString(li + 1).endsWith(",)")) {
+                                    ArrayList<Two> l = tuples.get(ordRelations.get(ri));
+                                    if(l == null) l = new ArrayList<>();
+                                    l.add(new Two(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
+                                    tuples.put(ordRelations.get(ri), l);
+                                }
+                                else {
+                                    ArrayList<Two> l = tuples.get(ordRelations.get(li));
+                                    if(l == null) l = new ArrayList<>();
+                                    l.add(new Two(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
+                                    tuples.put(ordRelations.get(li), l);
+                                }
+
+                                //Ceci pour les égalisations de null
+                                if(T.getString(li + 1).endsWith(",)")) {
+                                    egalite.add(
+                                        new Paire(
+                                            new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1),false),
+                                            new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1),false)
+                                        )
+                                    );          
+                                } else if(T.getString(ri + 1).endsWith(",)")) {
+                                    egalite.add(
+                                        new Paire(
+                                            new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1),false),
+                                            new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1),false)
+                                        )
+                                    );    
+                                }
+
+                                end = true;          
+                            }
+                        }
+                    }
+                }
+
+                addBD(tuples, T, ordRelations, toAdd);
+            }
+            if(end) return 1;
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
     
@@ -338,6 +427,8 @@ public class EGD extends Contrainte {
                     for(int li : indexLeft) {
                         for(int ri : indexRight) {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
+                                //TODO: Plus comme ça le action satisfy ! Il faut vérifier si y a un tuple qui existe c'est tout
+                                //TODO: Faire un SELECT
                                 return false;
                             }
                         }
@@ -388,6 +479,44 @@ public class EGD extends Contrainte {
             db.insertReq(req, val);
         }
 
+    }
+
+    private void addBD(HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations, HashSet<Couple> toAdd) throws SQLException {
+        int min = -1, max = -1;
+
+        for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
+            Relation r = entry.getKey();
+            for(int i = 0; i < ordRelations.size(); i++) {
+                if(ordRelations.get(i) == (r) && min == -1) min = i;
+                if(ordRelations.get(i) != (r) && min != -1 && max == -1) max = i;
+                
+            }
+            if(max == -1) max = ordRelations.size();
+
+            ArrayList<Valeur> val = new ArrayList<>();
+
+
+            System.out.println(min);
+            System.out.println(max);
+
+            for(int i = min; i < max; i++) {
+                String attr = T.getMetaData().getColumnName(i + 1);
+                val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
+                boolean adding = true;
+                for(Two two : entry.getValue()) {
+                    if(two.attr.equals(attr)) {
+                        adding = false;
+                        val.add(two.val);
+                        break;
+                    }
+                }
+                if(adding) {
+                    val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
+                }
+            }
+
+            toAdd.add(new Couple(r.getNomTable(), val));
+        }
     }
 
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {

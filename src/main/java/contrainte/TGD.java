@@ -439,7 +439,7 @@ public class TGD extends Contrainte {
         }
     }
 
-    public class Couple {
+    public static class Couple {
         String nom_table;
         ArrayList<Valeur> list;
 
