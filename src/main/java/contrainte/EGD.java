@@ -453,10 +453,9 @@ public class EGD extends Contrainte {
     }
 
     private void updateBD(Database db, HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations) throws SQLException {
-        int min = -1, max = -1;
-
         for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
+            int min = -1, max = -1;
             for(int i = 0; i < ordRelations.size(); i++) {
                 if(ordRelations.get(i) == r && min == -1) min = i;
                 if(ordRelations.get(i) != r && min != -1 && max == -1) max = i;
@@ -496,10 +495,9 @@ public class EGD extends Contrainte {
     }
 
     private void addBD(HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations, HashSet<Couple> toAdd) throws SQLException {
-        int min = -1, max = -1;
-
         for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
+            int min = -1, max = -1;
             for(int i = 0; i < ordRelations.size(); i++) {
                 if(ordRelations.get(i) == r && min == -1) min = i;
                 if(ordRelations.get(i) != r && min != -1 && max == -1) max = i;
@@ -514,9 +512,9 @@ public class EGD extends Contrainte {
 
             for(int i = min; i < max; i++) {
                 String attr = T.getMetaData().getColumnName(i + 1);
-                val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
                 boolean adding = true;
                 for(Two two : entry.getValue()) {
+                    System.out.println("(" + two.attr + "," + two.val.getValeur() +  ")");
                     if(two.attr.equals(attr)) {
                         adding = false;
                         val.add(two.val);
@@ -526,10 +524,9 @@ public class EGD extends Contrainte {
                 if(adding) {
                     val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
                 }
-                for(Valeur v:val) System.out.print(v.getValeur() + " ");
-                System.out.println();
             }
 
+            System.out.println("Relation : " + r.getNomTable());
             System.out.println("val.size() = " + val.size());
             for(Valeur v:val) System.out.print(v.getValeur() + " ");
             System.out.println();
