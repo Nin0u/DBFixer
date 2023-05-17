@@ -161,38 +161,40 @@ public class Chase {
             for(Contrainte c : sigma) {
                 System.out.print("Réparation des types ...");
                 c.repairType(db);
-                System.out.println("Fait");
+                System.out.println("Fait.");
 
-                int ret = 0;
-
-                if(c instanceof EGD) {
-                    while(true) {
-                        ret = c.action(c.executeCorps(db), db);
-
-                        if(ret == -1) return;
-                        if(ret == 1) end = false;
-                        if(ret == 0) break;
-                    }
-                } else {
-                    ret = c.actionCore(c.executeCorps(db), db, toAdd);
-                    if(ret == -1) return;
-                    if(ret == 1) end = false;
+                if (c.actionCore(c.executeCorps(db), db, toAdd) < 0){
+                    System.out.println("Erreur actionCore");
+                    return;
                 }
                 System.out.println();
             }
 
+            System.out.print("Insertion de tuples ...");
             // On ajoute les tuples
             for (Couple c : toAdd){
                 ArrayList<Valeur> val = c.getList();
                 ResultSetMetaData rsmd = db.getMetaData(c.getNomTable());
                 String req = "INSERT INTO " + c.getNomTable() + " VALUES (";
-                for (int i = 0; i < val.size(); i++){
+                for (int i = 0; i < val.size(); i++)
                     req += val.get(i).addStringReq(rsmd.getColumnTypeName(i + 1)) + ", ";
-                }
                 req = req.substring(0, req.length() - 2) + ")";
                 db.insertReq(req, val);
             }
+            System.out.println("Fait.");
 
+            System.out.print("Egalisation ...");
+            // Egaliser les EGD
+            for(Contrainte c : sigma) {
+                if(c instanceof EGD) {
+                    EGD e = (EGD)c;
+                    e.egalise(db);
+                    e.clearEgalite();
+                }
+            }
+            System.out.println("Fait.");
+            
+            System.out.println("FindCore");
             // On trouve le core
             findCore(db, sigma);
         }

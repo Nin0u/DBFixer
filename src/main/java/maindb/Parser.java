@@ -23,6 +23,7 @@ public class Parser {
      * @return Une liste contenant les contraintes sous forme d'objets
      */
     public static ArrayList<Contrainte> parse(InputStream in){
+        System.out.print("Parsing des DF ...");
         ArrayList<Contrainte> c = new ArrayList<Contrainte>();
         Scanner sc = new Scanner(in);
 
@@ -32,7 +33,7 @@ public class Parser {
         try{
             n = Integer.parseInt(sc.nextLine());
         } catch (NumberFormatException e) {
-            System.out.println("Parser.parse() : La première entrée doit être un entier !");
+            System.out.println("\nParser.parse() : La première entrée doit être un entier !");
             sc.close();
             return null;
         }
@@ -47,7 +48,7 @@ public class Parser {
             // On split la ligne en deux chaine : le corps et la tete
             String[] df = line.split("->");
             if (df.length != 2) {
-                System.out.println("Parser.parse() : -> : L'entrée n° " + String.valueOf(i) + " n'est pas une DF , elle sera retirée.");
+                System.out.println("\nParser.parse() : -> : L'entrée n° " + String.valueOf(i) + " n'est pas une DF , elle sera retirée.");
                 continue;
             }
             
@@ -58,12 +59,12 @@ public class Parser {
             ArrayList<Relation> relation_corps = new ArrayList<Relation>();
             
             if(!parseConjonction(df[1], egalite_tete, relation_tete)) {
-                System.out.println("Parser.parse() : parseConjonction(tete) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
+                System.out.println("\nParser.parse() : parseConjonction(tete) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
             }
 
             if (!parseConjonction(df[0], egalite_corps, relation_corps)){
-                System.out.println("Parser.parse() : parseConjonction(corps) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
+                System.out.println("\nParser.parse() : parseConjonction(corps) : L'entrée n° " + String.valueOf(i) + " n'est pas une DF, elle sera retirée.");
                 continue;
             }
 
@@ -73,10 +74,11 @@ public class Parser {
             else if (relation_tete.size() == 0)
                 c.add(new EGD(relation_corps, egalite_corps, egalite_tete));
             else 
-                System.out.println("Parser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une TGD ou EGD , elle sera retirée.");
+                System.out.println("\nParser.parse() : L'entrée n° " + String.valueOf(i) + " n'est pas une TGD ou EGD , elle sera retirée.");
         }
 
         sc.close();
+        System.out.println("Fait.");
         return c;
     }
 

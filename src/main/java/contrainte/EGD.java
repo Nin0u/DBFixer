@@ -9,7 +9,6 @@ import java.util.HashSet;
 
 import atome.*;
 import contrainte.TGD.Couple;
-import maindb.Chase;
 import maindb.ChaseMode;
 import maindb.Database;
 import variable.Attribut;
@@ -392,6 +391,7 @@ public class EGD extends Contrainte {
         int nb = 0;
 
         ResultSet T = db.selectRequest(req);
+        ResultSetMetaData rsmd = T.getMetaData();
 
         ArrayList<Attribut> orderAttribut = new ArrayList<>();
 
@@ -427,8 +427,19 @@ public class EGD extends Contrainte {
                     for(int li : indexLeft) {
                         for(int ri : indexRight) {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
-                                //TODO: Plus comme ça le action satisfy ! Il faut vérifier si y a un tuple qui existe c'est tout
-                                //TODO: Faire un SELECT
+                                // On doit vérifier s'il existe un tuple qui vérifie l'égalité (dans les deux sens)
+                                // S'il n'existe pas d'autre tuple on renvoie false pour le remettre dans D.
+                                String req1 = "SELECT * FROM " + rsmd.getTableName(li + 1) + " WHERE " + rsmd.getColumnName(li + 1) + "=" + T.getObject(ri + 1);
+                                String req2 = "SELECT * FROM " + rsmd.getTableName(ri + 1) + " WHERE " + rsmd.getColumnName(ri + 1) + "=" + T.getObject(li + 1);
+
+                                System.out.println("Req1 = " + req1);
+                                System.out.println("Req2 = " + req2);
+
+                                ResultSet T1 = db.selectRequest(req1);
+                                ResultSet T2 = db.selectRequest(req2);
+
+                                if (T1.next() || T2.next())
+                                    continue;
                                 return false;
                             }
                         }
@@ -448,8 +459,8 @@ public class EGD extends Contrainte {
         for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
             for(int i = 0; i < ordRelations.size(); i++) {
-                if(ordRelations.get(i) == (r) && min == -1) min = i;
-                if(ordRelations.get(i) != (r) && min != -1 && max == -1) max = i;
+                if(ordRelations.get(i) == r && min == -1) min = i;
+                if(ordRelations.get(i) != r && min != -1 && max == -1) max = i;
                 
             }
             if(max == -1) max = ordRelations.size();
@@ -457,9 +468,13 @@ public class EGD extends Contrainte {
             ArrayList<Valeur> val = new ArrayList<>();
             String req = "UPDATE " + r.getNomTable() + " SET ";
 
+            ArrayList<String> usedAttr = new ArrayList<>();
             for(Two two : entry.getValue()) {
-                req += two.attr + " = ?, ";
-                val.add(two.val);
+                if (!usedAttr.contains((two.attr))){
+                    req += two.attr + " = ?, ";
+                    val.add(two.val);
+                    usedAttr.add(two.attr);
+                }
             }
 
             System.out.println(min);
@@ -487,17 +502,16 @@ public class EGD extends Contrainte {
         for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
             for(int i = 0; i < ordRelations.size(); i++) {
-                if(ordRelations.get(i) == (r) && min == -1) min = i;
-                if(ordRelations.get(i) != (r) && min != -1 && max == -1) max = i;
-                
+                if(ordRelations.get(i) == r && min == -1) min = i;
+                if(ordRelations.get(i) != r && min != -1 && max == -1) max = i;
             }
+
             if(max == -1) max = ordRelations.size();
 
             ArrayList<Valeur> val = new ArrayList<>();
 
-
-            System.out.println(min);
-            System.out.println(max);
+            System.out.println("min = " + min);
+            System.out.println("max = " + max);
 
             for(int i = min; i < max; i++) {
                 String attr = T.getMetaData().getColumnName(i + 1);
@@ -513,7 +527,14 @@ public class EGD extends Contrainte {
                 if(adding) {
                     val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
                 }
+                for(Valeur v:val) System.out.print(v.getValeur() + " ");
+                System.out.println();
             }
+
+            System.out.println("val.size() = " + val.size());
+            for(Valeur v:val) System.out.print(v.getValeur() + " ");
+            System.out.println();
+            
 
             toAdd.add(new Couple(r.getNomTable(), val));
         }
@@ -528,6 +549,9 @@ public class EGD extends Contrainte {
         }
         return l;
     }
+
+    /** Vide le tableau egalite */
+    public void clearEgalite() { egalite.clear(); }
 
     /** Méthode d'affichage */
     public void affiche(){

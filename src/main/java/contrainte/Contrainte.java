@@ -197,7 +197,7 @@ public abstract class Contrainte {
     public int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException { return action(req, db); }
 
     /** Méthode pour la core chase. */
-    public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException { return action(req, db); }
+    public abstract int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException;
 
     /** Méthode pour vérifier qu'une DB satifait des contraintes */
     public abstract boolean actionSatisfy(String req, Database db)  throws SQLException;
