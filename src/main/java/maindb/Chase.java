@@ -210,42 +210,51 @@ public class Chase {
      * @param sigma L'ensemble des contraintes
      * @throws SQLException
      */
-    private static void findCore(Database db, ArrayList<Contrainte> sigma) throws SQLException{
+    private static void findCore(Database db, ArrayList<Contrainte> sigma) throws SQLException {
         // On récupère chaque tuple de D
         // Pour cela on va récupérer chaque table intervenant dans la tête des contraintes TGD
         for(Contrainte c : sigma) {
             if (c instanceof TGD) {
                 for (Relation r : ((TGD)c).getRelTete()) {
-                    // On récupère tous les tuples d'une table de la tete
-                    ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable());
-                    // Pour chacun de ces tuples 
-                    while (res.next()) {
-                        // On le retire temporairement en stockant ses valeurs en cas de rajout
-                        ArrayList<Valeur> values = new ArrayList<Valeur>();
-                        String delete = "DELETE FROM " + r.getNomTable() + " WHERE ";
-
-                        for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
-                            values.add(new Valeur(res.getMetaData().getColumnTypeName(i), res.getObject(i), false));
-                            delete += res.getMetaData().getColumnName(i) + " = ? AND "; 
-                        }
-                        delete = delete.substring(0, delete.length() - 5);
-                        db.insertReq(delete, values);
-
-                        // Si D satisfait sigma on retire définitivement notre tuple
-                        if (satisfy(db, sigma)) continue;
-
-                        // Sinon on rajoute le tuple
-                        else {
-                            String insert = "INSERT INTO " + r.getNomTable() + " VALUES ("; 
-                            for (int i = 0; i < values.size(); i++)
-                                insert+= "?, ";
-
-                            insert = insert.substring(0, insert.length() - 2) + ")";
-                            db.insertReq(insert, values);
-                        }
-                    }
+                    findCoreAux(db, r,sigma);
                 }
             } 
+            else { 
+                for (Relation r : ((EGD)c).getRelCorps()) {
+                    findCoreAux(db, r, sigma);
+                }
+            }
+        }
+    }
+
+    private static void findCoreAux(Database db, Relation r, ArrayList<Contrainte> sigma) throws SQLException {
+        // On récupère tous les tuples d'une table de la tete
+        ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable());
+        // Pour chacun de ces tuples 
+        while (res.next()) {
+            // On le retire temporairement en stockant ses valeurs en cas de rajout
+            ArrayList<Valeur> values = new ArrayList<Valeur>();
+            String delete = "DELETE FROM " + r.getNomTable() + " WHERE ";
+
+            for (int i = 1; i <= res.getMetaData().getColumnCount(); i++){
+                values.add(new Valeur(res.getMetaData().getColumnTypeName(i), res.getObject(i), false));
+                delete += res.getMetaData().getColumnName(i) + " = ? AND "; 
+            }
+            delete = delete.substring(0, delete.length() - 5);
+            db.insertReq(delete, values);
+
+            // Si D satisfait sigma on retire définitivement notre tuple
+            if (satisfy(db, sigma)) continue;
+
+            // Sinon on rajoute le tuple
+            else {
+                String insert = "INSERT INTO " + r.getNomTable() + " VALUES ("; 
+                for (int i = 0; i < values.size(); i++)
+                    insert+= "?, ";
+
+                insert = insert.substring(0, insert.length() - 2) + ")";
+                db.insertReq(insert, values);
+            }
         }
     }
 

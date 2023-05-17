@@ -428,17 +428,16 @@ public class EGD extends Contrainte {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
                                 // On doit vérifier s'il existe un tuple qui vérifie l'égalité (dans les deux sens)
                                 // S'il n'existe pas d'autre tuple on renvoie false pour le remettre dans D.
-                                String req1 = "SELECT * FROM " + rsmd.getTableName(li + 1) + " WHERE " + rsmd.getColumnName(li + 1) + "=" + T.getObject(ri + 1);
-                                String req2 = "SELECT * FROM " + rsmd.getTableName(ri + 1) + " WHERE " + rsmd.getColumnName(ri + 1) + "=" + T.getObject(li + 1);
+                                String req1 = "SELECT * FROM " + rsmd.getTableName(li + 1) + " WHERE " + rsmd.getColumnName(li + 1) + "= ?";
+                                String req2 = "SELECT * FROM " + rsmd.getTableName(ri + 1) + " WHERE " + rsmd.getColumnName(ri + 1) + "= ?";
 
-                                System.out.println("Req1 = " + req1);
-                                System.out.println("Req2 = " + req2);
+                                Valeur vl = new Valeur(rsmd.getColumnTypeName(li + 1), T.getObject(li + 1), false);
+                                Valeur vr = new Valeur(rsmd.getColumnTypeName(ri + 1), T.getObject(li + 1), false);
 
-                                ResultSet T1 = db.selectRequest(req1);
-                                ResultSet T2 = db.selectRequest(req2);
+                                ResultSet T1 = db.selectReq(req1, vl);
+                                ResultSet T2 = db.selectReq(req2, vr);
 
-                                if (T1.next() || T2.next())
-                                    continue;
+                                if (T1.next() || T2.next()) continue;
                                 return false;
                             }
                         }
@@ -506,9 +505,6 @@ public class EGD extends Contrainte {
             if(max == -1) max = ordRelations.size();
 
             ArrayList<Valeur> val = new ArrayList<>();
-
-            System.out.println("min = " + min);
-            System.out.println("max = " + max);
 
             for(int i = min; i < max; i++) {
                 String attr = T.getMetaData().getColumnName(i + 1);

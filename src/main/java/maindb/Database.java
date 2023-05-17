@@ -173,4 +173,18 @@ public class Database {
         }
         return res;
     }
+
+    public ResultSet selectReq(String sql, Valeur l) {
+        ResultSet res = null;
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            l.addPreparedStatementReq(pstmt, 1);
+            
+            System.out.println(pstmt);
+            res = pstmt.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
 }
