@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import atome.*;
-import contrainte.TGD.Couple;
 import maindb.ChaseMode;
 import maindb.Database;
 import variable.Attribut;
@@ -568,25 +567,5 @@ public class EGD extends Contrainte {
             e.affiche(); 
 
         System.out.println("=========== FIN EGD ==============");
-    }
-
-    public class Two {
-        String attr;
-        Valeur val;
-
-        public Two(String attr, Valeur val) {
-            this.attr = attr;
-            this.val = val;
-        }
-    }
-
-    public class Paire {
-        Valeur v1;
-        Valeur v2;
-
-        public Paire(Valeur v1, Valeur v2) {
-            this.v1 = v1;
-            this.v2 = v2;
-        }
     }
 }

@@ -439,24 +439,6 @@ public class TGD extends Contrainte {
         }
     }
 
-    public static class Couple {
-        String nom_table;
-        ArrayList<Valeur> list;
-
-        public Couple(String n, ArrayList<Valeur> l) {
-            nom_table = n;
-            list = l;
-        }
-
-        public ArrayList<Valeur> getList() {
-            return list;
-        }
-
-        public String getNomTable() {
-            return nom_table;
-        }
-    }
-
     /**
      * Vérifies si la TGD est satisfaite par la db
      * 

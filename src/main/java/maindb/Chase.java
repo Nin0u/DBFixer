@@ -10,11 +10,14 @@ import java.util.Scanner;
 
 import atome.Relation;
 import contrainte.*;
-import contrainte.TGD.Couple;
+import contrainte.Contrainte.Couple;
 import variable.Valeur;
 
 public class Chase {
-    /** Limite d'un tour d'Oblivious Chase : quand cette limite est atteinte, on demande à l'utilisateur si on veut refaire un tour. */
+    /** 
+     * Limite d'un tour d'Oblivious Chase.
+     * Quand cette limite est atteinte, on demande à l'utilisateur si on veut refaire un tour. 
+     */
     private static final int OBLIVIOUS_LIMIT = 5;
 
     /** 
@@ -246,6 +249,12 @@ public class Chase {
         }
     }
 
+    /**
+     * Vérifies si la base de données satisfait les contraintes.
+     * 
+     * @param db La base de données
+     * @param sigma Les contraintes
+     */
     public static boolean satisfy(Database db, ArrayList<Contrainte> sigma) {
         try {
             boolean b = true;

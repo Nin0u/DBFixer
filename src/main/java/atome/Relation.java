@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import variable.Attribut;
 
 public class Relation{
-    /** Un relation contient plusieurs variables qui sont soit des constantes soit des attributs */
-    private ArrayList<Attribut> membres;
-
     /** Nom de la table liée à la relation */
     private String nomTable;
+
+    /** Un relation contient plusieurs variables qui sont soit des constantes soit des attributs */
+    private ArrayList<Attribut> membres;
 
     /** Constructeur */
     public Relation(String nomTable){

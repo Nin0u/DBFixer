@@ -7,10 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import atome.*;
-import contrainte.TGD.Couple;
 import maindb.Database;
 import maindb.ChaseMode;
-import variable.Attribut;
+import variable.*;
 
 /** Super classe pour les EGD et TGD */
 public abstract class Contrainte {
@@ -41,6 +40,13 @@ public abstract class Contrainte {
         return egCorps;
     }
 
+    /**
+     * Construit la requête pour obtenir tous les tuples qui satisfont le corps.
+     * 
+     * @param db La base de données
+     * @return La chaîne de caractère de la requête.
+     * @throws SQLException
+     */
     public String executeCorps(Database db) throws SQLException {
         String select = "SELECT *";
         String from = "FROM ";
@@ -118,7 +124,12 @@ public abstract class Contrainte {
         return req;
     }
 
-    // But est de mettre les types NULL_* dans les bonnes colonnes pour eviter de planter les requetes plus tard
+    /**
+     * Le but est de mettre les types NULL_* dans les bonnes colonnes pour eviter de planter les requetes plus tard.
+     * 
+     * @param db La base de données 
+     * @throws SQLException
+     */
     public void repairType(Database db) throws SQLException {
         HashMap<String, ResultSetMetaData> mapTableData = new HashMap<>();
         HashMap<Attribut, ArrayList<Pair>> mapAttrTable = new HashMap<>();
@@ -187,30 +198,72 @@ public abstract class Contrainte {
         }
     }
     
-    /** 
-     * Méthode abstraite qui effectue soit une egalisation soit un ajoute de tuple
-     * selon si on est une EGD ou une TGD
-     */
+    /** Méthode abstraite qui effectue soit une egalisation soit un ajoute de tuple selon si on est une EGD ou une TGD */
     public abstract int action(String req, Database db) throws SQLException;
 
-    /** Méthode  pour la oblivious ou la skolem chase. */
-    public int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException { return action(req, db); }
+    /** Méthode abstraite pour la oblivious ou la skolem chase. */
+    public abstract int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException;
 
-    /** Méthode pour la core chase. */
+    /** Méthode abstraite pour la core chase. */
     public abstract int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException;
 
-    /** Méthode pour vérifier qu'une DB satifait des contraintes */
+    /** Méthode abstraite pour vérifier qu'une DB satifait des contraintes */
     public abstract boolean actionSatisfy(String req, Database db)  throws SQLException;
 
     /** Méthode abstraite d'affichage */
     public abstract void affiche();
 
+    /*
+     * ==================================================================
+     *
+     *  SOUS CLASSES UTILES
+     * 
+     * ==================================================================
+     */
     public class Pair {
         public Relation a;
         public Integer b;
         Pair(Relation a, Integer b) {
             this.a = a;
             this.b = b;
+        }
+    }
+
+    public class Couple {
+        String nom_table;
+        ArrayList<Valeur> list;
+
+        public Couple(String n, ArrayList<Valeur> l) {
+            nom_table = n;
+            list = l;
+        }
+
+        public ArrayList<Valeur> getList() {
+            return list;
+        }
+
+        public String getNomTable() {
+            return nom_table;
+        }
+    }
+
+    public class Two {
+        String attr;
+        Valeur val;
+
+        public Two(String attr, Valeur val) {
+            this.attr = attr;
+            this.val = val;
+        }
+    }
+
+    public class Paire {
+        Valeur v1;
+        Valeur v2;
+
+        public Paire(Valeur v1, Valeur v2) {
+            this.v1 = v1;
+            this.v2 = v2;
         }
     }
 }

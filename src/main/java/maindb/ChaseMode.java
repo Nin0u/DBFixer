@@ -1,21 +1,28 @@
 package maindb;
 
+/**
+ * Mode de Chase
+ * 0 (par défaut) : Standard Chase
+ * 1 : Oblivious Chase
+ * 2 : Skolem Chase
+ * 3 : Core Chase
+ */
 public enum ChaseMode {
-    STANDARD(0),
-    OBLIVIOUS(1),
-    SKOLEM(2),
-    CORE(3);
+    STANDARD,
+    OBLIVIOUS,
+    SKOLEM,
+    CORE;
 
-    protected int i;
-    private ChaseMode(int i) { this.i = i;}
+    private ChaseMode() {}
 
+    /**
+     * Renvoie le mode associé à l'entier i
+     * 
+     * On n'a pas besoin d'associer un nombre aux valeurs de ChaseMode car ils seront toujours
+     * dans le même ordre dans ChaseMode.values() qui est l'ordre de déclaration.
+     */
     public static ChaseMode getMode(int i) {
-        switch(i) {
-            case 0 : return STANDARD;
-            case 1 : return OBLIVIOUS;
-            case 2 : return SKOLEM;
-            case 3 : return CORE;
-            default : return null;
-        }
+        if(i < 0 || i > 4) return null;
+        return ChaseMode.values()[i];
     }
 }
