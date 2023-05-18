@@ -86,6 +86,7 @@ public class Chase {
     }
 
     // Oblivious chase
+    // TODO : Le Scanner bug un peu. Je vois pas trop comment le fix.
     private static void obliviousChase(Database db, ArrayList<Contrainte> sigma) throws SQLException{
         boolean end = false;
         int limit = 0;
@@ -103,13 +104,12 @@ public class Chase {
                     end = false;
                     limit++;
                     if (limit == OBLIVIOUS_LIMIT){
-                        Scanner sc = new Scanner(System.in);
                         System.out.println(String.valueOf(OBLIVIOUS_LIMIT) + " itérations effectuées : Voulez-vous continuer ? [y/n]");
+                        Scanner sc = new Scanner(System.in);
                         String a = sc.nextLine();
                         sc.close();
                         a = a.toLowerCase();
                         if (a.equals("y") || a.equals("o")) limit = 0;
-                        else break;
                     }
                 } 
                 System.out.println();
