@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 import atome.Relation;
 import contrainte.*;
-import contrainte.Contrainte.Couple;
+import contrainte.Contrainte.Tuple;
 import variable.Valeur;
 
 public class Chase {
@@ -159,7 +159,7 @@ public class Chase {
             end = true;
 
             // Pour chaque contrainte on doit faire l'union des tuples à ajouter
-            HashSet<Couple> toAdd = new  HashSet<>();
+            HashSet<Tuple> toAdd = new  HashSet<>();
 
             for(Contrainte c : sigma) {
                 System.out.print("Réparation des types ...");
@@ -175,7 +175,7 @@ public class Chase {
 
             System.out.println("--- Insertion de tuples ---");
             // On ajoute les tuples
-            for (Couple c : toAdd){
+            for (Tuple c : toAdd){
                 ArrayList<Valeur> val = c.getList();
                 ResultSetMetaData rsmd = db.getMetaData(c.getNomTable());
                 String req = "INSERT INTO " + c.getNomTable() + " VALUES (";

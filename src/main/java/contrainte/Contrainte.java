@@ -219,7 +219,7 @@ public abstract class Contrainte {
     public abstract int actionOblivious(String req, Database db, ChaseMode mode) throws SQLException;
 
     /** Méthode abstraite pour la core chase. */
-    public abstract int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException;
+    public abstract int actionCore(String req, Database db, HashSet<Tuple> toAdd) throws SQLException;
 
     /** Méthode abstraite pour vérifier qu'une DB satifait des contraintes */
     public abstract boolean actionSatisfy(String req, Database db)  throws SQLException;
@@ -234,6 +234,8 @@ public abstract class Contrainte {
      * 
      * ==================================================================
      */
+
+    /** Association entre une relation et un entier */
     public class Pair {
         public Relation a;
         public Integer b;
@@ -243,11 +245,12 @@ public abstract class Contrainte {
         }
     }
 
-    public class Couple {
+    /** Représente une tuple */
+    public class Tuple {
         String nom_table;
         ArrayList<Valeur> list;
 
-        public Couple(String n, ArrayList<Valeur> l) {
+        public Tuple(String n, ArrayList<Valeur> l) {
             nom_table = n;
             list = l;
         }
@@ -261,16 +264,18 @@ public abstract class Contrainte {
         }
     }
 
-    public class Two {
+    /** Association entre un Attribut et une Valeur */
+    public class Champ {
         String attr;
         Valeur val;
 
-        public Two(String attr, Valeur val) {
+        public Champ(String attr, Valeur val) {
             this.attr = attr;
             this.val = val;
         }
     }
 
+    /** Association de deux valeurs à égaliser pour Oblivious et Skolem. */
     public class Paire {
         Valeur v1;
         Valeur v2;

@@ -340,7 +340,7 @@ public class TGD extends Contrainte {
      * @return -1 en cas d'erreur. 0 si la chase doit terminer. 1 Si la chase doit continuer.
      */
     @Override
-    public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException {
+    public int actionCore(String req, Database db, HashSet<Tuple> toAdd) throws SQLException {
         try {
             // Valeur de retour
             int ret = 0;
@@ -417,7 +417,7 @@ public class TGD extends Contrainte {
                                 jlies++;
                             }
                         }
-                        toAdd.add(new Couple(r2.getNomTable(), add));
+                        toAdd.add(new Tuple(r2.getNomTable(), add));
                     }
                 }
             }
@@ -590,8 +590,7 @@ public class TGD extends Contrainte {
         db.insertRequest(req, values);
     }
 
-
-
+    /** Vérifies si un index se trouve dans une liste d'index */
     private boolean indexInList(int i, ArrayList<Integer> L){
         for(Integer index : L)
             if(index.intValue() == i) return true;

@@ -115,7 +115,7 @@ public class EGD extends Contrainte {
             while(T.next()) {
                 printTuple(T, nb);
 
-                HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
+                HashMap<Relation, ArrayList<Champ>> tuples = new HashMap<>();
 
                 for(Egalite eg : egTete) {
                     Attribut [] attr = eg.getMembres();
@@ -130,15 +130,15 @@ public class EGD extends Contrainte {
                         for(int ri : indexRight) {
                             if(!T.getObject(li + 1).equals(T.getObject(ri + 1))) {
                                 if(!T.getString(li + 1).endsWith(",)")) {
-                                    ArrayList<Two> l = tuples.get(ordRelations.get(ri));
+                                    ArrayList<Champ> l = tuples.get(ordRelations.get(ri));
                                     if(l == null) l = new ArrayList<>();
-                                    l.add(new Two(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
+                                    l.add(new Champ(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
                                     tuples.put(ordRelations.get(ri), l);
                                 }
                                 else {
-                                    ArrayList<Two> l = tuples.get(ordRelations.get(li));
+                                    ArrayList<Champ> l = tuples.get(ordRelations.get(li));
                                     if(l == null) l = new ArrayList<>();
-                                    l.add(new Two(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
+                                    l.add(new Champ(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
                                     tuples.put(ordRelations.get(li), l);
                                 }
                                 end = true;          
@@ -280,7 +280,7 @@ public class EGD extends Contrainte {
     }
 
     /** Méthode pour la core chase. */
-    public int actionCore(String req, Database db, HashSet<Couple> toAdd) throws SQLException { 
+    public int actionCore(String req, Database db, HashSet<Tuple> toAdd) throws SQLException { 
         int nb = 0;
         
         ResultSet T = db.selectRequest(req);
@@ -302,7 +302,7 @@ public class EGD extends Contrainte {
             while(T.next()) {
                 printTuple(T, nb);
 
-                HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
+                HashMap<Relation, ArrayList<Champ>> tuples = new HashMap<>();
 
                 for(Egalite eg : egTete) {
                     Attribut [] attr = eg.getMembres();
@@ -319,15 +319,15 @@ public class EGD extends Contrainte {
 
                                 //Ceci pour ajouter un après un tuple pour l'égalisation
                                 if(!T.getString(li + 1).endsWith(",)")) {
-                                    ArrayList<Two> l = tuples.get(ordRelations.get(ri));
+                                    ArrayList<Champ> l = tuples.get(ordRelations.get(ri));
                                     if(l == null) l = new ArrayList<>();
-                                    l.add(new Two(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
+                                    l.add(new Champ(T.getMetaData().getColumnName(ri + 1), new Valeur(T.getMetaData().getColumnTypeName(li + 1), T.getObject(li + 1), false)));
                                     tuples.put(ordRelations.get(ri), l);
                                 }
                                 else {
-                                    ArrayList<Two> l = tuples.get(ordRelations.get(li));
+                                    ArrayList<Champ> l = tuples.get(ordRelations.get(li));
                                     if(l == null) l = new ArrayList<>();
-                                    l.add(new Two(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
+                                    l.add(new Champ(T.getMetaData().getColumnName(li + 1), new Valeur(T.getMetaData().getColumnTypeName(ri + 1), T.getObject(ri + 1), false)));
                                     tuples.put(ordRelations.get(li), l);
                                 }
 
@@ -427,8 +427,8 @@ public class EGD extends Contrainte {
         }
     }
 
-    private void updateBD(Database db, HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations) throws SQLException {
-        for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
+    private void updateBD(Database db, HashMap<Relation, ArrayList<Champ>> tuples, ResultSet T,  ArrayList<Relation> ordRelations) throws SQLException {
+        for(HashMap.Entry<Relation, ArrayList<Champ>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
             int min = -1, max = -1;
             for(int i = 0; i < ordRelations.size(); i++) {
@@ -442,11 +442,11 @@ public class EGD extends Contrainte {
             String req = "UPDATE " + r.getNomTable() + " SET ";
 
             ArrayList<String> usedAttr = new ArrayList<>();
-            for(Two two : entry.getValue()) {
-                if (!usedAttr.contains((two.attr))){
-                    req += two.attr + " = ?, ";
-                    val.add(two.val);
-                    usedAttr.add(two.attr);
+            for(Champ field : entry.getValue()) {
+                if (!usedAttr.contains((field.attr))){
+                    req += field.attr + " = ?, ";
+                    val.add(field.val);
+                    usedAttr.add(field.attr);
                 }
             }
 
@@ -466,8 +466,8 @@ public class EGD extends Contrainte {
 
     }
 
-    private void addBD(HashMap<Relation, ArrayList<Two>> tuples, ResultSet T,  ArrayList<Relation> ordRelations, HashSet<Couple> toAdd) throws SQLException {
-        for(HashMap.Entry<Relation, ArrayList<Two>> entry : tuples.entrySet()) {
+    private void addBD(HashMap<Relation, ArrayList<Champ>> tuples, ResultSet T,  ArrayList<Relation> ordRelations, HashSet<Tuple> toAdd) throws SQLException {
+        for(HashMap.Entry<Relation, ArrayList<Champ>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
             int min = -1, max = -1;
             for(int i = 0; i < ordRelations.size(); i++) {
@@ -482,10 +482,10 @@ public class EGD extends Contrainte {
             for(int i = min; i < max; i++) {
                 String attr = T.getMetaData().getColumnName(i + 1);
                 boolean adding = true;
-                for(Two two : entry.getValue()) {
-                    if(two.attr.equals(attr)) {
+                for(Champ field : entry.getValue()) {
+                    if(field.attr.equals(attr)) {
                         adding = false;
-                        val.add(two.val);
+                        val.add(field.val);
                         break;
                     }
                 }
@@ -494,7 +494,7 @@ public class EGD extends Contrainte {
                 }
             }
 
-            toAdd.add(new Couple(r.getNomTable(), val));
+            toAdd.add(new Tuple(r.getNomTable(), val));
         }
     }
 

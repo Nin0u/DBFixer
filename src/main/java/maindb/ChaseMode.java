@@ -13,8 +13,6 @@ public enum ChaseMode {
     SKOLEM,
     CORE;
 
-    private ChaseMode() {}
-
     /**
      * Renvoie le mode associé à l'entier i
      * 
