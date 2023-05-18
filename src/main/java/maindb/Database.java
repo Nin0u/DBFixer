@@ -50,11 +50,16 @@ public class Database {
         conn.close();
     }
 
-    /** Traite une requete SELECT */
-    public ResultSet selectRequest(String selectSQL) {
+    /** 
+     * Traite une requete SELECT toute construite
+     * 
+     * @param request La requête
+     * @return Le ResultSet contenant l'ensemble des tuples correspondant à request.
+     */
+    public ResultSet selectRequest(String request) {
         ResultSet res = null;
         try {
-            PreparedStatement pstmt = conn.prepareStatement(selectSQL);
+            PreparedStatement pstmt = conn.prepareStatement(request);
             res = pstmt.executeQuery();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -63,48 +68,41 @@ public class Database {
         return res;
     }
 
-    public ResultSet selectUpdate(String selectSQL)  {
+    /**
+     * Traite une requête SELECT avec insertion de valeur dans la requête.
+     * Cette fonction est utilisée dans le cas d'une insertion d'une seule valeur 
+     * dans la requête d'où l'absence de liste dans les paramètres.
+     * 
+     * @param request La requête.
+     * @param l La Valeur à insérer dans la requête.
+     * @return Le ResultSet contenant l'ensemble des tuples correspondant à request.
+     */
+    public ResultSet selectRequest(String request, Valeur l) {
         ResultSet res = null;
         try {
-            PreparedStatement stmt = conn.prepareStatement(selectSQL,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_UPDATABLE);
-            res = stmt.executeQuery();
+            PreparedStatement pstmt = conn.prepareStatement(request);
+            l.addPreparedStatementReq(pstmt, 1);
+            
+            System.out.println(pstmt);
+            res = pstmt.executeQuery();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return res;
     }
 
-    public int updateQuery(String nomTable, String attr, Object o, ArrayList<String> attrs, ArrayList<Object> values) {
-        int res = 0;
-
-        String sql = "UPDATE " + nomTable + " SET " + attr + " = ? WHERE ";
-        for(int i = 0; i < attrs.size(); i++)
-            sql += attrs.get(i) + " = ? AND ";
-        sql = sql.substring(0, sql.length() - 5);
-
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setObject(1, o);
-            for(int i = 0; i < attrs.size(); i++) {
-                stmt.setObject(i + 2, values.get(i));
-            }
-            System.out.println(stmt);
-            res = stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return res;
-    }
-
-    public ResultSet selectQuery(String sql, ArrayList<Object> values) {
+     /**
+     * Traite une requête SELECT avec insertions de valeurs dans la requête.
+     * Cette fonction est utilisée dans le cas de plusieurs insertions dans la requête.
+     * 
+     * @param request La requête.
+     * @param values Les Valeurs à insérer dans la requête.
+     * @return Le ResultSet contenant l'ensemble des tuples correspondant à request.
+     */
+    public ResultSet selectRequest(String request, ArrayList<Object> values) {
         ResultSet res = null;
         try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(request);
             for(int i = 0; i < values.size(); i++) {
                 stmt.setObject(i + 1, values.get(i));
             }
@@ -117,11 +115,42 @@ public class Database {
         return res;
     }
 
-    public int updateRequest(String updateSQL) {
+    /**
+     * Effectue une insertions dans la base de données avec insertions de valeurs dans la requête.
+     * 
+     * @param request La requête d'insertion
+     * @param l La liste des valeurs à insérer dans request
+     * 
+     * @return 
+     */
+    public int insertRequest(String request, ArrayList<Valeur> l) {
         int res = 0;
 
         try {
-            PreparedStatement pstmt = conn.prepareStatement(updateSQL);
+            PreparedStatement pstmt = conn.prepareStatement(request);
+            int j = 1;
+            for(int i = 0; i < l.size(); i++) {
+                if(l.get(i).addPreparedStatementReq(pstmt, j)) j++;
+            }
+            System.out.println(pstmt);
+            res = pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    /**
+     * Traite une requete UPDATE toute construite.
+     * 
+     * @param request La requête.
+     * @return Le nombre de ligne mises à jour.
+     */
+    public int updateRequest(String request) {
+        int res = 0;
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(request);
             res = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -130,6 +159,11 @@ public class Database {
         return res;
     }
 
+    /**
+     * Récupère les métadonnées d'une table.
+     * 
+     * @param nomTable Le nom de la table
+     */
     public ResultSetMetaData getMetaData(String nomTable) {
         ResultSetMetaData res = null;
         try {
@@ -143,6 +177,14 @@ public class Database {
         return res;
     }
 
+    /**
+     * Execute une requête d'alteration de table pour changer 
+     * le type d'une colonne.
+     * 
+     * @param nomTable Le nom de la table
+     * @param type Le nouveau type
+     * @param attr L'attribut qui change de type
+     */
     public void changeType(String nomTable, String type, String attr) {
         String req = "ALTER TABLE " + nomTable + 
         " ALTER COLUMN " + attr + " TYPE " + type +
@@ -155,36 +197,5 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public int insertReq(String sql, ArrayList<Valeur> l) {
-        int res = 0;
-
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            int j = 1;
-            for(int i = 0; i < l.size(); i++) {
-                if(l.get(i).addPreparedStatementReq(pstmt, j)) j++;
-            }
-            System.out.println(pstmt);
-            res = pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return res;
-    }
-
-    public ResultSet selectReq(String sql, Valeur l) {
-        ResultSet res = null;
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            l.addPreparedStatementReq(pstmt, 1);
-            
-            System.out.println(pstmt);
-            res = pstmt.executeQuery();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return res;
     }
 }

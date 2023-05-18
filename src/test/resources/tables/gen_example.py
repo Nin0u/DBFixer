@@ -1,7 +1,11 @@
 import random as rd
 
+'''
+    Génère une date aléatoire entre 2000 et 2023 
+    L'intervalle des années a été choisi arbitrairement.
+'''
 def rand_date() :
-    annee = rd.randint(1900,2023)
+    annee = rd.randint(2000,2023)
     mois = rd.randint(1,12)
     if (mois % 2 == 1 and mois < 8) or (mois % 2 == 0 and mois > 7) : 
         jour = format(rd.randint(1,31), '02d')
@@ -16,6 +20,9 @@ def rand_date() :
 
     return jour,mois,annee
     
+'''
+    MAIN
+'''
 if __name__ == "__main__" :
     path = __file__[0:len(__file__) - 14]
     out = open(path + "fill_example.sql", "w")
@@ -33,7 +40,7 @@ if __name__ == "__main__" :
         jour,mois,annee = rand_date()
         insert += "TO_DATE('" + jour + "/" + mois + "/" + annee + "', 'DD/MM/YYYY')" + ", "
 
-        # nss
+        # nss on attribut un nombre entre 0 et 10 pour forcer quelques égalisations
         insert += str(rd.randint(0,10)) + ");"
         out.write(insert + "\n")
 

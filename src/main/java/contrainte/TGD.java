@@ -527,7 +527,7 @@ public class TGD extends Contrainte {
 
         sql = sql.substring(0, sql.length() - 5);
 
-        return db.selectQuery(sql, values);
+        return db.selectRequest(sql, values);
     }
 
     /**
@@ -587,7 +587,7 @@ public class TGD extends Contrainte {
         }
         
         req = req.substring(0, req.length() - 2) + ")";
-        db.insertReq(req, values);
+        db.insertRequest(req, values);
     }
 
 

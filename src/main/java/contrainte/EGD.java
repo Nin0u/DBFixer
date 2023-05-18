@@ -271,7 +271,7 @@ public class EGD extends Contrainte {
                             req += p.v2.addStringReq(T.getMetaData().getColumnTypeName(i));
                             req += " WHERE " + T.getMetaData().getColumnName(i) + " = ?";
                             val.add(p.v1);
-                            db.insertReq(req, val); 
+                            db.insertRequest(req, val); 
                         }
                     }
                 }
@@ -410,8 +410,8 @@ public class EGD extends Contrainte {
                                 Valeur vl = new Valeur(rsmd.getColumnTypeName(li + 1), T.getObject(li + 1), false);
                                 Valeur vr = new Valeur(rsmd.getColumnTypeName(ri + 1), T.getObject(li + 1), false);
 
-                                ResultSet T1 = db.selectReq(req1, vl);
-                                ResultSet T2 = db.selectReq(req2, vr);
+                                ResultSet T1 = db.selectRequest(req1, vl);
+                                ResultSet T2 = db.selectRequest(req2, vr);
 
                                 if (T1.next() || T2.next()) continue;
                                 return false;
@@ -461,7 +461,7 @@ public class EGD extends Contrainte {
 
             req = req.substring(0, req.length() - 5);
             System.out.println(req);
-            db.insertReq(req, val);
+            db.insertRequest(req, val);
         }
 
     }

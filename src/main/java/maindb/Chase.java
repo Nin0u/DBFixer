@@ -182,7 +182,7 @@ public class Chase {
                 for (int i = 0; i < val.size(); i++)
                     req += val.get(i).addStringReq(rsmd.getColumnTypeName(i + 1)) + ", ";
                 req = req.substring(0, req.length() - 2) + ")";
-                db.insertReq(req, val);
+                db.insertRequest(req, val);
             }
 
             System.out.print("\nEgalisation ...");
@@ -246,7 +246,7 @@ public class Chase {
                 delete += res.getMetaData().getColumnName(i) + " = ? AND "; 
             }
             delete = delete.substring(0, delete.length() - 5);
-            db.insertReq(delete, values);
+            db.insertRequest(delete, values);
 
             // Si D satisfait sigma on retire définitivement notre tuple
             if (satisfy(db, sigma)) continue;
@@ -258,7 +258,7 @@ public class Chase {
                     insert+= "?, ";
 
                 insert = insert.substring(0, insert.length() - 2) + ")";
-                db.insertReq(insert, values);
+                db.insertRequest(insert, values);
             }
         }
     }
