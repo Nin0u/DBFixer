@@ -18,7 +18,7 @@ public class Valeur {
 
     /** 
      * Constructeur
-     *  Valeur par défaut : "NULL"
+     * Valeur par défaut : "NULL"
      */
     public Valeur(String type) {
         this.type = type;
@@ -64,11 +64,6 @@ public class Valeur {
         } else return false;
     } 
 
-    /** 
-     * Vérifies si deux valeurs sont égales i.e : 
-     * Elles ont le même type au NULL près.
-     * Elles ont la même valeur.
-     */
     @Override
     public boolean equals(Object o) {
         if(!(o instanceof Valeur)) return false;

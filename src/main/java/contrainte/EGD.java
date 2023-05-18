@@ -233,7 +233,7 @@ public class EGD extends Contrainte {
         }
     }
 
-    
+    // TODO : Comment
     public boolean needToAdd(ResultSet T, ArrayList<Attribut> orderAttribut) throws SQLException {
         ArrayList<Valeur> valeurs = new ArrayList<>();
         for(Egalite eg : egTete) {
@@ -258,6 +258,7 @@ public class EGD extends Contrainte {
         return true;
     }
 
+    /** Méthode d'égalisation */
     public void egalise(Database db) throws SQLException {
         for(Relation r : rlCorps) {
             ResultSet T = db.selectRequest("SELECT * FROM " + r.getNomTable());
@@ -364,7 +365,7 @@ public class EGD extends Contrainte {
         }
     }
 
-    
+    /** Méthode pour satisfy */
     public boolean actionSatisfy(String req, Database db) throws SQLException {
         int nb = 0;
 
@@ -466,6 +467,17 @@ public class EGD extends Contrainte {
 
     }
 
+    /**
+     * Construit l'ensemble des tuples à ajouter à la BD.
+     * Utilisée pour Core Chase.
+     * 
+     * @param tuples Map Relation - Liste de Champs.
+     * @param T Le pointeur de notre tuple actuel.
+     * @param ordRelations Liste contenant les Relations dans l'ordre.
+     * @param toAdd Liste dans laquelle on ajoute les tuple à ajouter.
+     * 
+     * @throws SQLException
+     */
     private void addBD(HashMap<Relation, ArrayList<Champ>> tuples, ResultSet T,  ArrayList<Relation> ordRelations, HashSet<Tuple> toAdd) throws SQLException {
         for(HashMap.Entry<Relation, ArrayList<Champ>> entry : tuples.entrySet()) {
             Relation r = entry.getKey();
@@ -498,6 +510,7 @@ public class EGD extends Contrainte {
         }
     }
 
+    /** Récupère toutes les occurences d'un attribut dans une liste */
     private ArrayList<Integer> getIndex(ArrayList<Attribut> list, Attribut a) {
         ArrayList<Integer> l = new ArrayList<>();
         int index = 0;
