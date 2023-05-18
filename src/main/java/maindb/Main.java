@@ -5,7 +5,10 @@ import java.sql.SQLException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.File;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+
 
 import contrainte.*;
 
@@ -67,6 +70,8 @@ public class Main{
         // Connexion à la BD
         Database db = new Database(login);
 
+
+        Instant startParse = Instant.now();
         // Parsing des DF
         // S'il n'y a pas de contrainte (ou toutes invalides) aucune raison de lancer la chase.
         ArrayList<Contrainte> contraintes = Parser.parse(is);
@@ -74,12 +79,20 @@ public class Main{
             System.out.println("Contraintes nulles. Lancement de la chase annulée.");
             return;
         }
+        Instant endParse = Instant.now();
+        Duration timeElapsedParse = Duration.between(startParse, endParse);
+        System.out.println("Temps du parsing : "+ timeElapsedParse.toMillis() + "ms");
         
         // On lance la chase
         try {
             db.connect();
+            Instant startChase = Instant.now();
             Chase.chase(mode, db, contraintes);
+            Instant endChase = Instant.now();
+            Duration timeElapsedChase = Duration.between(startChase, endChase);
+            System.out.println("Temps de la Chase : "+ timeElapsedChase.toMillis() + "ms");
             db.close();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
