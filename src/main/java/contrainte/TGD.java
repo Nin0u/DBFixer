@@ -134,10 +134,7 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
-                for(int i = 0; i < orderAttribut.size(); i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, orderAttribut.size());
 
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){
@@ -228,10 +225,7 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
-                for(int i = 0; i < orderAttribut.size(); i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, orderAttribut.size());
 
                 if (mode == ChaseMode.SKOLEM) {
                     if(!needToAdd(T, rT, db, nullGeneres, orderAttribut))
@@ -272,7 +266,6 @@ public class TGD extends Contrainte {
                     for(Integer index : attrLibres){
                         String columnTypeName = metaData.getColumnTypeName(index + 1);
                         String nom_attr = metaData.getColumnLabel(index + 1);
-                        System.out.println(columnTypeName);
                         if(!columnTypeName.startsWith("null_")){
                             String alterReq = buildCreateTypeReq(nom_attr, columnTypeName, r2.getNomTable());
                             db.updateRequest(alterReq);
@@ -366,10 +359,7 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
-                for(int i = 0; i < orderAttribut.size(); i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, orderAttribut.size());
 
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){
@@ -463,10 +453,7 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
-                for(int i = 0; i < orderAttribut.size(); i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, orderAttribut.size());
 
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){

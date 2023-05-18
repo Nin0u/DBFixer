@@ -1,5 +1,6 @@
 package contrainte;
 
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -196,6 +197,19 @@ public abstract class Contrainte {
                 mapTableData.put(table, db.getMetaData(table));
             }
         }
+    }
+
+    /**
+     * Méthode qui affiche le tuple à traiter
+     * 
+     * @param T Le ResultSet qui pointe le tuple actuel
+     * @param len Le nombre de colonne du tuple
+     */
+    protected static void printTuple(ResultSet T, int len) throws SQLException {
+        System.out.print("Tuple à traiter : ");
+        for(int i = 0; i < len; i++) 
+            System.out.print(T.getString(i + 1) + " ");
+        System.out.println();
     }
     
     /** Méthode abstraite qui effectue soit une egalisation soit un ajoute de tuple selon si on est une EGD ou une TGD */

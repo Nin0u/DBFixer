@@ -113,10 +113,7 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
-                for(int i = 0; i < nb; i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, nb);
 
                 HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
 
@@ -189,10 +186,7 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
-                for(int i = 0; i < nb; i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, nb);
 
                 if(mode == ChaseMode.SKOLEM && !needToAdd(T, orderAttribut))
                     continue;
@@ -261,22 +255,10 @@ public class EGD extends Contrainte {
 
         if(nullGeneres.contains(valeurs)) return false;
         nullGeneres.add(valeurs);
-        for(int i = 0; i < nullGeneres.size(); i++) {
-            for(int j = 0; j < nullGeneres.get(i).size(); j++) {
-                System.out.print(nullGeneres.get(i).get(j).getValeur().toString() + " ");
-            }
-            System.out.println();
-        }
         return true;
     }
 
     public void egalise(Database db) throws SQLException {
-        System.out.println("EGALISE !");
-        for(Paire p : egalite) {
-            System.out.println(p.v1.getValeur().toString());
-            System.out.println(p.v2.getValeur().toString());
-
-        }
         for(Relation r : rlCorps) {
             ResultSet T = db.selectRequest("SELECT * FROM " + r.getNomTable());
             while(T.next()) {
@@ -318,10 +300,7 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
-                for(int i = 0; i < nb; i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, nb);
 
                 HashMap<Relation, ArrayList<Two>> tuples = new HashMap<>();
 
@@ -409,10 +388,7 @@ public class EGD extends Contrainte {
         
         try {
             while(T.next()) {
-                for(int i = 0; i < nb; i++) {
-                    System.out.print(T.getString(i + 1) + " ");
-                }
-                System.out.println();
+                printTuple(T, nb);
 
                 for(Egalite eg : egTete) {
                     Attribut [] attr = eg.getMembres();
@@ -474,9 +450,6 @@ public class EGD extends Contrainte {
                 }
             }
 
-            System.out.println(min);
-            System.out.println(max);
-
             req = req.substring(0, req.length() - 2);
 
             req += " WHERE ";
@@ -510,7 +483,6 @@ public class EGD extends Contrainte {
                 String attr = T.getMetaData().getColumnName(i + 1);
                 boolean adding = true;
                 for(Two two : entry.getValue()) {
-                    System.out.println("(" + two.attr + "," + two.val.getValeur() +  ")");
                     if(two.attr.equals(attr)) {
                         adding = false;
                         val.add(two.val);
@@ -521,12 +493,6 @@ public class EGD extends Contrainte {
                     val.add(new Valeur(T.getMetaData().getColumnTypeName(i + 1), T.getObject(i + 1), false));
                 }
             }
-
-            System.out.println("Relation : " + r.getNomTable());
-            System.out.println("val.size() = " + val.size());
-            for(Valeur v:val) System.out.print(v.getValeur() + " ");
-            System.out.println();
-            
 
             toAdd.add(new Couple(r.getNomTable(), val));
         }

@@ -173,7 +173,7 @@ public class Chase {
                 System.out.println();
             }
 
-            System.out.print("Insertion de tuples ...");
+            System.out.println("--- Insertion de tuples ---");
             // On ajoute les tuples
             for (Couple c : toAdd){
                 ArrayList<Valeur> val = c.getList();
@@ -184,9 +184,8 @@ public class Chase {
                 req = req.substring(0, req.length() - 2) + ")";
                 db.insertReq(req, val);
             }
-            System.out.println("Fait.");
 
-            System.out.print("Egalisation ...");
+            System.out.print("\nEgalisation ...");
             // Egaliser les EGD
             for(Contrainte c : sigma) {
                 if(c instanceof EGD) {
@@ -197,7 +196,7 @@ public class Chase {
             }
             System.out.println("Fait.");
             
-            System.out.println("FindCore");
+            System.out.println("\n--- FindCore ---");
             // On trouve le core
             findCore(db, sigma);
         }
@@ -212,21 +211,27 @@ public class Chase {
      */
     private static void findCore(Database db, ArrayList<Contrainte> sigma) throws SQLException {
         // On récupère chaque tuple de D
-        // Pour cela on va récupérer chaque table intervenant dans la tête des contraintes TGD
         for(Contrainte c : sigma) {
-            if (c instanceof TGD) {
-                for (Relation r : ((TGD)c).getRelTete()) {
+            // Pour cela on va récupérer chaque table intervenant dans la tête des contraintes TGD.
+            if (c instanceof TGD)
+                for (Relation r : ((TGD)c).getRelTete())
                     findCoreAux(db, r,sigma);
-                }
-            } 
-            else { 
-                for (Relation r : ((EGD)c).getRelCorps()) {
+
+            // Ou alors dans le cas des EGD on récupère les tables intervenant dans le corps de la contrainte.
+            else
+                for (Relation r : ((EGD)c).getRelCorps()) 
                     findCoreAux(db, r, sigma);
-                }
-            }
         }
     }
 
+    /**
+     * Execute la recherche du core sur une relation.
+     * 
+     * @param db La base de données.
+     * @param r La relation qu'on traite.
+     * @param sigma L'ensemble des contraintes.
+     * @throws SQLException
+     */
     private static void findCoreAux(Database db, Relation r, ArrayList<Contrainte> sigma) throws SQLException {
         // On récupère tous les tuples d'une table de la tete
         ResultSet res = db.selectRequest("SELECT * FROM " + r.getNomTable());

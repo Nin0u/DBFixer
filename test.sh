@@ -9,4 +9,13 @@ echo "==== Création des tables ===="
 echo "============ Fin ============"
 echo
 
-./exec.sh -dblp=src/test/resources/login/$1.login -dfp=src/test/resources/df/$2.test -mode=$3
+if [ -f "src/test/resources/login/$1.login" ]; then
+    if [ -f "src/test/resources/df/$2.test" ]; then 
+            ./exec.sh -dblp=src/test/resources/login/$1.login -dfp=src/test/resources/df/$2.test -mode=$3
+    else 
+        echo "$2 : Nom de fichier inexistant."
+    fi
+else 
+    echo "$1 : Nom de fichier inexistant."
+fi
+echo

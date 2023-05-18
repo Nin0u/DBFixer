@@ -34,7 +34,7 @@ if __name__ == "__main__" :
         insert += "TO_DATE('" + jour + "/" + mois + "/" + annee + "', 'DD/MM/YYYY')" + ", "
 
         # nss
-        insert += str(i) + ");"
+        insert += str(rd.randint(0,10)) + ");"
         out.write(insert + "\n")
 
     # On généère les scrutins
