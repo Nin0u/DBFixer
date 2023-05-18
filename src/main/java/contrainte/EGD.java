@@ -233,7 +233,6 @@ public class EGD extends Contrainte {
         }
     }
 
-    // TODO : Comment
     public boolean needToAdd(ResultSet T, ArrayList<Attribut> orderAttribut) throws SQLException {
         ArrayList<Valeur> valeurs = new ArrayList<>();
         for(Egalite eg : egTete) {

@@ -288,7 +288,6 @@ public class TGD extends Contrainte {
         }
     }
 
-    // TODO : Comment
     public boolean needToAdd(ResultSet T, ResultSetMetaData rT, Database db, HashMap<ArrayList<Valeur>, Integer> nullGeneres, ArrayList<Attribut> orderAttribut) throws SQLException {
         ArrayList<Valeur> valeursLiees = new ArrayList<Valeur>();
         
@@ -316,7 +315,6 @@ public class TGD extends Contrainte {
             // On essaye directement d'ajouter le tuple : il faut maintenant vérifier si le tuple est présent dans null_generes ou non
 
             // On récupère les valeurs des attributs liés
-            // TODO : modifier de manière à ce que (1,2,3) et (1 , (0,2), (0,3)) soient associés au même NULL
             for(int i : attrLies) {
                 valeursLiees.add(new Valeur(rT.getColumnTypeName(i + 1), T.getObject(i + 1), false));
                 System.out.print("+ " + rT.getColumnTypeName(i + 1) + " " + T.getString(i + 1) + " ");
