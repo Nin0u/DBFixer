@@ -34,6 +34,8 @@ public class TGD extends Contrainte {
     /** Numéro de null. */
     private static int num_null = 0;
 
+    private ArrayList<ArrayList<Valeur>> treated; 
+
     /** Liste contenant les relations de la tete. */
     private ArrayList<Relation> rlTete;
 
@@ -50,6 +52,7 @@ public class TGD extends Contrainte {
         super(rlCorps, null);
         this.rlTete = rlTete;
         nullGeneres = new HashMap<ArrayList<Valeur>, Integer>();
+        treated = new ArrayList<>();
     }
 
     /** Getter */
@@ -134,8 +137,15 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
-                printTuple(T, orderAttribut.size());
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    tuple.add(new Valeur(rsmd.getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
 
+                printTuple(T, orderAttribut.size());
+                
                 // On regarde les relations dans la tête
                 for (Relation r2 : rlTete){
                     // On construit les variables libres et liées 
@@ -225,6 +235,12 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
+                    tuple.add(new Valeur(T.getMetaData().getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
                 printTuple(T, orderAttribut.size());
 
                 if (mode == ChaseMode.SKOLEM) {
@@ -358,6 +374,12 @@ public class TGD extends Contrainte {
 
             // Pour chaque tuple
             while(T.next()) {
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
+                    tuple.add(new Valeur(T.getMetaData().getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
                 printTuple(T, orderAttribut.size());
 
                 // On regarde les relations dans la tête

@@ -22,6 +22,8 @@ public class EGD extends Contrainte {
     /** Liste des égalités dans la tête. */
     private ArrayList<Egalite> egTete;
 
+    private ArrayList<ArrayList<Valeur>> treated;
+
     /** Pour le Oblivious et Skloem */
     private ArrayList<Paire> egalite;
     private ArrayList<ArrayList<Valeur>> nullGeneres;
@@ -38,6 +40,7 @@ public class EGD extends Contrainte {
         this.egTete = egTete;
         egalite = new ArrayList<>();
         nullGeneres = new ArrayList<>();
+        treated = new ArrayList<>();
     }
 
     /** Getter */
@@ -113,6 +116,13 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
+                    tuple.add(new Valeur(T.getMetaData().getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
+
                 printTuple(T, nb);
 
                 HashMap<Relation, ArrayList<Champ>> tuples = new HashMap<>();
@@ -186,6 +196,13 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
+                    tuple.add(new Valeur(T.getMetaData().getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
+
                 printTuple(T, nb);
 
                 if(mode == ChaseMode.SKOLEM && !needToAdd(T, orderAttribut))
@@ -300,6 +317,12 @@ public class EGD extends Contrainte {
         try {
             boolean end = false; 
             while(T.next()) {
+                ArrayList<Valeur> tuple = new ArrayList<>();
+                for(int i = 1; i <= T.getMetaData().getColumnCount(); i++) {
+                    tuple.add(new Valeur(T.getMetaData().getColumnTypeName(i), T.getObject(i), false));
+                }
+                if(treated.contains(tuple)) continue;
+                treated.add(tuple);
                 printTuple(T, nb);
 
                 HashMap<Relation, ArrayList<Champ>> tuples = new HashMap<>();
